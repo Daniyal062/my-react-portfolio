@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitalPulse Health Tracker — Case Study · Daniyal Maqsood</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0a0a0a;--paper:#faf8f5;--cream:#f0ebe4;
+  --purple:#7c5cbf;--purple-light:#ede8f8;--purple-dark:#2d2040;
+  --accent:#c8401a;--muted:#7a7068;--rule:#d8d0c8;
+  --mono:'DM Mono',monospace;--serif:'DM Serif Display',serif;--display:'Bebas Neue',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.6;cursor:none;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1;opacity:.5}
+#cursor{position:fixed;width:10px;height:10px;background:var(--purple);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .15s;mix-blend-mode:multiply}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid var(--purple);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);opacity:.5}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:18px 48px;background:rgba(250,248,245,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--rule)}
+.back-link{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;cursor:none}
+.back-link:hover{color:var(--purple)}
+.topbar-title{font-family:var(--display);font-size:18px;letter-spacing:.08em;color:var(--ink)}
+.topbar-right{font-size:11px;color:var(--muted);letter-spacing:.1em}
+
+/* HERO — warm & organic */
+.cs-hero{padding:120px 48px 80px;background:var(--purple-dark);color:#f0e8ff;position:relative;overflow:hidden}
+.cs-hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(124,92,191,.3) 0%,transparent 70%);pointer-events:none}
+.cs-hero::after{content:'VITALPULSE';position:absolute;bottom:-40px;right:-20px;font-family:var(--display);font-size:clamp(80px,14vw,180px);color:rgba(255,255,255,.025);line-height:1;pointer-events:none;user-select:none}
+.cs-eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#9b7fd4;margin-bottom:18px}
+.cs-title{font-family:var(--display);font-size:clamp(72px,10vw,140px);line-height:.88;letter-spacing:-.01em;margin-bottom:40px;color:#f0e8ff}
+.cs-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid rgba(255,255,255,.08);padding-top:32px}
+.cs-meta-item{padding-right:24px;border-right:1px solid rgba(255,255,255,.07)}
+.cs-meta-item:last-child{border-right:none}
+.cs-meta-item label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);display:block;margin-bottom:7px}
+.cs-meta-item span{font-size:13px;color:#f0e8ff}
+
+.cs-body{max-width:1100px;margin:0 auto;padding:80px 48px}
+.cs-section{margin-bottom:100px}
+.cs-sec-label{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--purple);margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.cs-sec-label::after{content:'';flex:1;height:1px;background:var(--rule)}
+.cs-h2{font-family:var(--display);font-size:clamp(36px,4.5vw,60px);line-height:.93;margin-bottom:24px;color:var(--ink)}
+.cs-p{color:var(--muted);line-height:1.9;font-size:13px;max-width:680px}
+.cs-p+.cs-p{margin-top:16px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:40px}
+
+/* INSIGHT CARDS */
+.insight-card{background:var(--cream);border:1px solid var(--rule);padding:28px;border-radius:4px}
+.insight-card h4{font-family:var(--display);font-size:22px;margin-bottom:8px}
+.insight-card p{font-size:12px;color:var(--muted);line-height:1.75}
+.insight-num{font-family:var(--display);font-size:52px;color:var(--purple);line-height:1;margin-bottom:8px}
+
+/* DIARY STUDY TIMELINE */
+.timeline{margin-top:40px;position:relative}
+.timeline::before{content:'';position:absolute;left:16px;top:0;bottom:0;width:2px;background:var(--rule)}
+.tl-item{display:flex;gap:28px;margin-bottom:32px;position:relative}
+.tl-dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--rule);background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;z-index:1}
+.tl-dot.purple{border-color:var(--purple);background:var(--purple-light)}
+.tl-content{padding-top:4px;flex:1}
+.tl-day{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.tl-title{font-family:var(--display);font-size:20px;margin-bottom:6px}
+.tl-body{font-size:12px;color:var(--muted);line-height:1.75}
+
+/* EMOTIONAL MATRIX */
+.emotion-matrix{margin-top:40px;background:var(--cream);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.em-header{padding:16px 20px;border-bottom:1px solid var(--rule);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.em-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rule)}
+.em-cell{background:var(--paper);padding:16px;text-align:center}
+.em-cell.header{background:var(--cream);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.em-emoji{font-size:24px;margin-bottom:6px}
+.em-label{font-size:11px;color:var(--ink);margin-bottom:4px}
+.em-sub{font-size:10px;color:var(--muted)}
+.em-cell.pos .em-label{color:var(--purple)}
+.em-cell.neg .em-label{color:var(--accent)}
+
+/* WIREFRAMES */
+.wf-card{background:var(--cream);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.wf-label{padding:8px 14px;font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+.wf-label.reject{background:rgba(200,64,26,.1);color:var(--accent)}
+.wf-label.ok{background:rgba(122,112,104,.1);color:var(--muted)}
+.wf-label.final{background:var(--purple-dark);color:#f0e8ff}
+.wf-body{padding:16px}
+.wf-bar{height:6px;background:var(--rule);border-radius:3px;margin-bottom:8px}
+.wf-bar.s{width:35%}.wf-bar.m{width:60%}.wf-bar.f{width:100%}
+.wf-rect{height:60px;background:var(--rule);border-radius:2px;margin-bottom:8px;opacity:.5}
+.wf-rect.sm{height:32px}
+.wf-ring-wf{width:56px;height:56px;border-radius:50%;border:6px solid var(--rule);border-top-color:var(--purple);border-right-color:var(--purple);border-bottom-color:#9b7fd4;margin:0 auto 8px}
+.wf-chip-row{display:flex;gap:6px;margin-bottom:8px}
+.wf-chip{height:18px;background:var(--rule);border-radius:9px;flex:1;opacity:.5}
+.wf-note{font-size:9px;color:var(--muted);border-top:1px solid var(--rule);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between}
+
+/* DESIGN DIRECTION — warm / organic */
+.palette{display:flex;gap:10px;margin-top:32px;flex-wrap:wrap}
+.swatch{flex:1;min-width:80px;height:72px;border-radius:8px;position:relative}
+.swatch-label{position:absolute;bottom:8px;left:10px;font-size:9px;font-weight:500;letter-spacing:.06em}
+
+/* FINAL SCREENS */
+.screens-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;margin-top:40px}
+.screens-row::-webkit-scrollbar{height:4px}
+.screens-row::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+.screen{flex-shrink:0;background:#fff;border-radius:24px;padding:20px;width:210px;font-family:var(--mono);box-shadow:0 20px 50px rgba(45,32,64,.1);border:1px solid rgba(124,92,191,.08)}
+.s-pill{width:36px;height:4px;background:var(--purple-light);border-radius:2px;margin:0 auto 14px}
+.s-greet{font-size:10px;color:#6b5c8a;margin-bottom:10px}
+.s-ring-wrap{position:relative;width:72px;height:72px;margin:0 auto 10px}
+.s-ring{width:72px;height:72px;border-radius:50%;border:8px solid var(--purple-light);border-top-color:var(--purple);border-right-color:var(--purple);border-bottom-color:#9b7fd4;position:absolute}
+.s-score{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--purple-dark)}
+.s-mood{text-align:center;font-size:10px;color:var(--purple);margin-bottom:12px}
+.s-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.s-metric{background:var(--purple-light);border-radius:10px;padding:10px;text-align:center}
+.s-mval{font-size:15px;color:var(--purple)}
+.s-mkey{font-size:8px;color:#9d8cbf;letter-spacing:.1em}
+.s-bar-chart{display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:6px}
+.s-col{flex:1;border-radius:2px 2px 0 0;background:var(--purple-light)}
+.s-col.hi{background:var(--purple)}
+.s-months{display:flex;justify-content:space-between;font-size:8px;color:#9d8cbf;margin-bottom:12px}
+.s-streak{background:var(--purple-light);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px}
+.s-streak-val{font-size:18px;color:#fbbf24}
+.s-streak-lbl{font-size:9px;color:#9d8cbf;letter-spacing:.1em}
+.s-tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.s-tag{font-size:9px;padding:3px 9px;background:var(--purple-light);border-radius:12px;color:var(--purple)}
+.s-insights{margin-top:4px}
+.s-insight-item{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--purple-light);font-size:10px;color:#6b5c8a}
+
+/* LEARNINGS */
+.learnings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.learning-big{background:var(--purple-dark);color:#f0e8ff;padding:32px;border-radius:4px}
+.lb-num{font-family:var(--display);font-size:60px;color:#9b7fd4;line-height:1;margin-bottom:12px}
+.lb-title{font-family:var(--serif);font-style:italic;font-size:22px;color:#f0e8ff;margin-bottom:12px}
+.lb-body{font-size:12px;color:rgba(240,232,255,.45);line-height:1.85}
+
+.next-case{background:var(--purple-dark);color:#f0e8ff;padding:64px 48px;display:flex;justify-content:space-between;align-items:center}
+.nc-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
+.nc-title{font-family:var(--display);font-size:clamp(36px,5vw,64px);line-height:.95;color:#f0e8ff}
+.nc-link{display:inline-flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9b7fd4;text-decoration:none;transition:gap .3s;margin-top:20px;cursor:none}
+.nc-link:hover{gap:20px;color:var(--accent)}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .75s ease,transform .75s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}
+
+@media(max-width:900px){
+  .topbar,.cs-hero,.cs-body,.next-case{padding-left:22px;padding-right:22px}
+  .cs-title{font-size:clamp(56px,12vw,100px)}
+  .cs-meta{grid-template-columns:1fr 1fr;gap:20px}
+  .cs-meta-item{border-right:none}
+  .two-col,.three-col,.learnings-grid{grid-template-columns:1fr}
+  .next-case{flex-direction:column;gap:32px}
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<div class="topbar">
+  <a href="index.html" class="back-link">← Back to Portfolio</a>
+  <span class="topbar-title">VITALPULSE</span>
+  <span class="topbar-right">Case Study 02 / 03</span>
+</div>
+
+<div class="cs-hero">
+  <div class="cs-eyebrow">Case Study — 02 · UI/UX Design · Health &amp; Wellness</div>
+  <h1 class="cs-title">VITAL<br>PULSE</h1>
+  <div class="cs-meta">
+    <div class="cs-meta-item"><label>Role</label><span>UI/UX Designer + Researcher</span></div>
+    <div class="cs-meta-item"><label>Tools</label><span>Figma, Notion, Maze</span></div>
+    <div class="cs-meta-item"><label>Duration</label><span>5 Weeks</span></div>
+    <div class="cs-meta-item"><label>Platform</label><span>iOS Mobile App</span></div>
+  </div>
+</div>
+
+<div class="cs-body">
+
+  <!-- 01 PROBLEM -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">01 — The Problem</div>
+    <h2 class="cs-h2">Data Was Creating<br>Anxiety, Not Motivation</h2>
+    <p class="cs-p">Fitness apps were designed by people who loved metrics. The result: dashboards that looked like cockpits — intimidating before you'd even taken your first step. A referenced study showed 71% of fitness app users felt "inadequate" when opening their health app, regardless of whether their actual metrics were good or bad.</p>
+    <p class="cs-p">The brief was precise: redesign the core feedback loop. Make health data feel encouraging, not clinical. Make every open feel like a small win — even on bad days.</p>
+    <div class="three-col">
+      <div class="insight-card">
+        <div class="insight-num">71%</div>
+        <h4>Felt Inadequate</h4>
+        <p>Users who felt "not good enough" when opening a fitness app — regardless of actual health performance.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-num">14d</div>
+        <h4>Average Churn</h4>
+        <p>Most fitness app users who receive no encouragement within the first 2 weeks stop using the app entirely.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-num">6→1</div>
+        <h4>Homepage Metrics</h4>
+        <p>The redesign reduced visible homepage metrics from 6 competing data points to 1 dominant daily score.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 RESEARCH -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">02 — Research Methodology</div>
+    <h2 class="cs-h2">A Diary Study Revealed<br>the Emotional Pattern</h2>
+    <p class="cs-p">Standard usability testing would miss the core issue — this was a problem of emotional experience over time, not task completion. I ran a 2-week diary study with 18 participants. They logged how they felt before and after opening their health app, using a simple emoji scale. The pattern was consistent and stark.</p>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot purple">📋</div>
+        <div class="tl-content">
+          <div class="tl-day">Week 1 · Days 1–3</div>
+          <div class="tl-title">Initial Excitement</div>
+          <p class="tl-body">Participants started with high motivation. They opened the app 4–6× daily. Emotional response: 😊 → 😐. The novelty carried them past the complexity.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot purple">📉</div>
+        <div class="tl-content">
+          <div class="tl-day">Week 1 · Days 4–7</div>
+          <div class="tl-title">The Friction Cliff</div>
+          <p class="tl-body">App opens dropped to 1–2×/day. Participants described feeling like they were "doing homework" rather than tracking health. The visual complexity was demanding cognitive effort they didn't want to spend.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot purple">😰</div>
+        <div class="tl-content">
+          <div class="tl-day">Week 2 · Days 8–11</div>
+          <div class="tl-title">Anxiety Peak</div>
+          <p class="tl-body">13 of 18 participants reported feeling anxious when opening the app. The emotional response wasn't triggered by bad numbers — it was triggered by the visual density alone, before they'd even read a single metric.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">🚪</div>
+        <div class="tl-content">
+          <div class="tl-day">Week 2 · Days 12–14</div>
+          <div class="tl-title">Abandonment</div>
+          <p class="tl-body">11 of 18 participants had effectively stopped using the app by day 14. Not because they stopped caring about their health — but because the app made them feel worse, not better.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:40px;background:var(--purple-light);border-left:3px solid var(--purple);padding:24px 28px;border-radius:0 4px 4px 0;max-width:640px" class="reveal">
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">Core Insight</div>
+      <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--purple-dark);line-height:1.7">"Users experience interfaces emotionally first, rationally second. If the emotional response on open is negative — complexity, overwhelm, inadequacy — no amount of useful data will retain them."</p>
+    </div>
+  </div>
+
+  <!-- 03 WIREFRAMES -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">03 — Wireframes</div>
+    <h2 class="cs-h2">The Score-First<br>Approach</h2>
+    <p class="cs-p">The central wireframe decision: replace the metric grid with a single circular score. Everything else becomes secondary, revealed progressively. The ring metaphor was chosen because it's universally understood (progress, completion, achievement) without requiring any explanation.</p>
+    <div class="three-col">
+      <div class="wf-card">
+        <div class="wf-label reject">Concept A — Grid · Rejected</div>
+        <div class="wf-body">
+          <div class="wf-chip-row"><div class="wf-chip"></div><div class="wf-chip"></div></div>
+          <div class="wf-chip-row"><div class="wf-chip"></div><div class="wf-chip"></div></div>
+          <div class="wf-chip-row"><div class="wf-chip"></div><div class="wf-chip"></div></div>
+          <div class="wf-rect sm"></div>
+          <div class="wf-note"><span>6 equal metrics</span><span>No hierarchy</span></div>
+        </div>
+      </div>
+      <div class="wf-card">
+        <div class="wf-label ok">Concept B — List · Refined</div>
+        <div class="wf-body">
+          <div class="wf-bar f" style="height:4px;border-radius:2px"></div>
+          <div class="wf-rect" style="height:36px;margin-top:8px"></div>
+          <div class="wf-bar f" style="height:1px;background:var(--rule);margin-bottom:8px"></div>
+          <div class="wf-rect sm"></div>
+          <div class="wf-bar f" style="height:1px;background:var(--rule);margin-bottom:8px"></div>
+          <div class="wf-rect sm"></div>
+          <div class="wf-note"><span>Better hierarchy</span><span>No emotional hook</span></div>
+        </div>
+      </div>
+      <div class="wf-card" style="border-color:var(--purple)">
+        <div class="wf-label final">Concept C — Ring Score ✓</div>
+        <div class="wf-body">
+          <div class="wf-ring-wf"></div>
+          <div class="wf-bar s" style="margin:0 auto 8px;width:50px"></div>
+          <div class="wf-chip-row"><div class="wf-chip"></div><div class="wf-chip"></div></div>
+          <div class="wf-chip-row"><div class="wf-chip"></div><div class="wf-chip"></div></div>
+          <div class="wf-note"><span>Single focus</span><span>Immediate emotion</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 VISUAL DESIGN -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">04 — Visual Design</div>
+    <h2 class="cs-h2">Soft, Warm, Alive.</h2>
+    <p class="cs-p">The visual direction is intentionally therapeutic. Warm whites, soft amethyst purples, and generous rounded forms that feel organic rather than clinical. The entire palette was tested in user interviews for "approachability" — if a color felt cold or medical, it was eliminated.</p>
+    <div class="palette">
+      <div class="swatch" style="background:#faf8f5;border:1px solid #e8e0d8"><span class="swatch-label" style="color:var(--purple-dark)">Warm White</span></div>
+      <div class="swatch" style="background:#ede8f8"><span class="swatch-label" style="color:var(--purple)">Soft Lilac</span></div>
+      <div class="swatch" style="background:#9b7fd4"><span class="swatch-label" style="color:#fff">Lavender</span></div>
+      <div class="swatch" style="background:#7c5cbf"><span class="swatch-label" style="color:#fff">Amethyst</span></div>
+      <div class="swatch" style="background:#2d2040"><span class="swatch-label" style="color:#f0e8ff">Deep Violet</span></div>
+      <div class="swatch" style="background:#fbbf24"><span class="swatch-label" style="color:var(--purple-dark)">Reward Gold</span></div>
+    </div>
+    <div class="screens-row">
+      <!-- Home / Score Screen -->
+      <div class="screen">
+        <div class="s-pill"></div>
+        <div class="s-greet">Good morning, Daniyal 👋</div>
+        <div class="s-ring-wrap"><div class="s-ring"></div><div class="s-score">87</div></div>
+        <div class="s-mood">Excellent today 🎯</div>
+        <div class="s-grid">
+          <div class="s-metric"><div class="s-mval">8.2k</div><div class="s-mkey">STEPS</div></div>
+          <div class="s-metric"><div class="s-mval">7.5h</div><div class="s-mkey">SLEEP</div></div>
+          <div class="s-metric"><div class="s-mval">2.1L</div><div class="s-mkey">WATER</div></div>
+          <div class="s-metric"><div class="s-mval">420</div><div class="s-mkey">CALS BURNED</div></div>
+        </div>
+        <div class="s-tag-row">
+          <div class="s-tag">Active day</div><div class="s-tag">Well rested</div><div class="s-tag">On track</div>
+        </div>
+      </div>
+      <!-- Weekly Trends Screen -->
+      <div class="screen">
+        <div class="s-pill"></div>
+        <div style="font-size:11px;color:var(--purple-dark);font-weight:500;margin-bottom:14px">This Week</div>
+        <div class="s-bar-chart">
+          <div class="s-col" style="height:60%"></div>
+          <div class="s-col hi" style="height:85%"></div>
+          <div class="s-col" style="height:55%"></div>
+          <div class="s-col hi" style="height:90%"></div>
+          <div class="s-col" style="height:70%"></div>
+          <div class="s-col hi" style="height:95%"></div>
+          <div class="s-col" style="height:50%"></div>
+        </div>
+        <div class="s-months"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+        <div class="s-streak">
+          <div class="s-streak-val">🔥 6</div>
+          <div><div style="font-size:12px;color:var(--purple-dark)">Day Streak</div><div class="s-streak-lbl">KEEP IT GOING</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:#9d8cbf;line-height:1.6">Best week this month. You're in your top 10% 🏆</div>
+      </div>
+      <!-- Personalization Screen -->
+      <div class="screen">
+        <div class="s-pill"></div>
+        <div style="font-size:11px;color:var(--purple-dark);font-weight:500;margin-bottom:14px">Your Goals</div>
+        <div class="s-insights">
+          <div class="s-insight-item"><span>👟</span><span>10,000 steps/day</span><div style="margin-left:auto;font-size:9px;color:var(--purple)">82%</div></div>
+          <div class="s-insight-item"><span>💧</span><span>2.5L water/day</span><div style="margin-left:auto;font-size:9px;color:var(--purple)">84%</div></div>
+          <div class="s-insight-item"><span>😴</span><span>8 hours sleep</span><div style="margin-left:auto;font-size:9px;color:#fbbf24)">94%</div></div>
+          <div class="s-insight-item"><span>🔥</span><span>500 cals burned</span><div style="margin-left:auto;font-size:9px;color:var(--purple)">84%</div></div>
+        </div>
+        <div style="margin-top:12px;background:var(--purple);border-radius:8px;padding:10px;text-align:center;font-size:10px;color:#fff;letter-spacing:.1em">+ ADD NEW GOAL</div>
+      </div>
+      <!-- Bad Day Mode Screen -->
+      <div class="screen">
+        <div class="s-pill"></div>
+        <div class="s-greet">Rough day, Daniyal 💙</div>
+        <div class="s-ring-wrap">
+          <div class="s-ring" style="border-top-color:#9b7fd4;border-right-color:#9b7fd4;border-bottom-color:var(--purple-light)"></div>
+          <div class="s-score" style="font-size:18px">62</div>
+        </div>
+        <div class="s-mood" style="color:#9b7fd4">Not your best — that's OK 🌙</div>
+        <div style="background:var(--purple-light);border-radius:10px;padding:12px;font-size:11px;color:var(--purple-dark);line-height:1.7;margin-bottom:10px">Even on tough days, your 6-day streak is something to protect. Rest counts. 💪</div>
+        <div class="s-tag-row">
+          <div class="s-tag">Rest day</div><div class="s-tag">Streak safe</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding:20px;background:var(--cream);border:1px solid var(--rule);border-radius:4px;max-width:640px" class="reveal">
+      <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Design Decision — Bad Day Mode</div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.8">The fourth screen shows the most important design decision: how to handle a below-average score. Rather than showing a disappointing number without context, the app reframes it as part of a journey. "Not your best — that's OK" tested 3× more positively than simply showing "62" in red. Language is design.</p>
+    </div>
+  </div>
+
+  <!-- 05 RESULTS -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">05 — Results</div>
+    <h2 class="cs-h2">Retention Told<br>the Story</h2>
+    <p class="cs-p">We ran the redesign as an A/B test against the original for 4 weeks. The primary metric was day-14 retention — were users still actively using the app two weeks after first open? This is the industry-standard churn benchmark for health apps.</p>
+    <div class="three-col">
+      <div class="insight-card" style="border-left:3px solid var(--purple)">
+        <div class="insight-num" style="color:var(--ink)">4×</div>
+        <h4>Week-3 Retention</h4>
+        <p>Users who personalized their own goals showed 4× higher week-3 retention vs. those on default settings.</p>
+      </div>
+      <div class="insight-card" style="border-left:3px solid var(--ink)">
+        <div class="insight-num" style="color:var(--ink)">+64%</div>
+        <h4>Daily Opens</h4>
+        <p>Average daily app opens increased 64% vs. the control. Users were checking in more, not less, with less data shown.</p>
+      </div>
+      <div class="insight-card" style="border-left:3px solid #9b7fd4">
+        <div class="insight-num" style="color:var(--ink)">9.1/10</div>
+        <h4>Satisfaction Score</h4>
+        <p>Post-redesign satisfaction score vs. 4.2/10 baseline. The most common word in feedback: "encouraging."</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 LEARNINGS -->
+  <div class="cs-section reveal">
+    <div class="cs-sec-label">06 — What I Learned</div>
+    <h2 class="cs-h2">How Emotional Design<br>Changed My Practice</h2>
+    <div class="learnings-grid">
+      <div class="learning-big">
+        <div class="lb-num">01</div>
+        <div class="lb-title">Frame the story, not just the data</div>
+        <p class="lb-body">The number 87 means nothing. "Excellent today" means everything. Users experience your interface emotionally first, rationally second. Your copy and framing matter as much as your layout — possibly more. Language is the invisible design layer.</p>
+      </div>
+      <div class="learning-big">
+        <div class="lb-num">02</div>
+        <div class="lb-title">Metaphors are your fastest onboarding</div>
+        <p class="lb-body">Not a single user in testing asked what the ring meant. They immediately understood progress and completion. When your visual metaphor is right, you eliminate instruction — and instruction is always friction. Design for instant understanding over described understanding.</p>
+      </div>
+      <div class="learning-big">
+        <div class="lb-num">03</div>
+        <div class="lb-title">Personalization is a retention strategy</div>
+        <p class="lb-body">Users who set their own goals stayed 4× longer. Giving someone ownership of their experience makes them accountable to it. Customization isn't a power-user feature — it's a psychological commitment device that the majority of users need to stay engaged long-term.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="next-case">
+  <div>
+    <div class="nc-label">Next Case Study</div>
+    <div class="nc-title">SHOPRIFT<br>E-COMMERCE</div>
+    <a href="case-shoprift.html" class="nc-link">View Case Study →</a>
+  </div>
+  <div style="font-family:var(--display);font-size:120px;color:rgba(255,255,255,.04);line-height:1;user-select:none">03</div>
+</div>
+
+<script>
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function t(){cur.style.left=mx+'px';cur.style.top=my+'px';rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(t);})();
+document.addEventListener('mouseover',e=>{if(e.target.closest('a,button')){cur.style.transform='translate(-50%,-50%) scale(2.5)';ring.style.opacity='0';}});
+document.addEventListener('mouseout',e=>{if(e.target.closest('a,button')){cur.style.transform='translate(-50%,-50%) scale(1)';ring.style.opacity='.5';}});
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');obs.unobserve(x.target);}});},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

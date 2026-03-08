@@ -1,0 +1,43 @@
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px;
+  transition: background .4s, padding .4s, border-color .4s;
+  border-bottom: 1px solid transparent;
+}
+.stuck {
+  background: rgba(244,243,240,.94);
+  backdrop-filter: blur(16px);
+  padding: 14px 40px;
+  border-color: var(--rule);
+}
+.logo {
+  font-family: var(--fb); font-weight: 600; font-size: 15px;
+  color: var(--ink); text-decoration: none; cursor: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.avail {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: #2d6e2d; font-family: var(--fm);
+  background: #eaf4ea; border: 1px solid #b8d8b8;
+  padding: 3px 9px; border-radius: 20px;
+}
+.avail::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: #2d6e2d; animation: pulse 2s infinite;
+}
+.right { display: flex; align-items: center; gap: 32px; }
+.link {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  cursor: none; transition: color .2s;
+}
+.link:hover { color: var(--ink); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
+}
+
+@media (max-width: 960px) {
+  .nav, .stuck { padding-left: 20px; padding-right: 20px; }
+}

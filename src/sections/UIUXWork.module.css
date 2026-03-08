@@ -1,0 +1,121 @@
+.section { padding: 80px 40px; }
+.secHdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+.secLbl { display: flex; align-items: center; gap: 10px; font-family: var(--fm); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.secLbl::before { content: ''; width: 18px; height: 1px; background: var(--muted); }
+.secCount { font-family: var(--fm); font-size: 10px; color: var(--rule); }
+.title { font-family: var(--fb); font-weight: 600; font-size: clamp(32px,4.2vw,56px); line-height: .95; letter-spacing: -.02em; color: var(--ink); margin-bottom: 44px; }
+.titleEm { font-family: var(--ff); font-style: italic; font-weight: 300; color: var(--muted); }
+
+/* BENTO */
+.bento { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.bc { border-radius: 16px; overflow: hidden; cursor: none; transition: transform .4s cubic-bezier(.25,.46,.45,.94), box-shadow .4s cubic-bezier(.25,.46,.45,.94); position: relative; }
+.bc:hover { transform: translateY(-5px); box-shadow: 0 28px 64px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.05); }
+
+/* FINFLOW */
+.bcFin { grid-column: 1/3; min-height: 480px; display: grid; grid-template-columns: 1fr 1fr; background: #0e1a2e; border: 1px solid rgba(255,255,255,.06); }
+.bv { background: linear-gradient(145deg,#0e1a2e 0%,#102840 100%); display: flex; align-items: center; justify-content: center; padding: 40px; position: relative; overflow: hidden; }
+.bv::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 60%,rgba(29,142,255,.18) 0%,transparent 65%); }
+.bi { padding: 36px; display: flex; flex-direction: column; justify-content: space-between; background: #0e1a2e; }
+
+/* VITALPULSE */
+.bcVit { grid-column: 3/4; min-height: 480px; display: flex; flex-direction: column; background: #f2eefb; border: 1px solid rgba(155,127,212,.2); }
+.bvVit { flex: 1; background: linear-gradient(145deg,#f2eefb 0%,#e4d9f8 100%); padding: 32px; }
+.bvVit::before { background: radial-gradient(ellipse at 60% 30%,rgba(155,127,212,.22) 0%,transparent 65%); }
+.biVit { padding: 28px; background: #f2eefb; }
+
+/* SHOPRIFT */
+.bcShop { grid-column: 1/4; min-height: 320px; display: grid; grid-template-columns: 340px 1fr; background: #111; border: 1px solid rgba(255,255,255,.05); }
+.bvShop { background: linear-gradient(145deg,#111 0%,#1c1c1c 100%); }
+.bvShop::before { background: radial-gradient(ellipse at 70% 50%,rgba(200,64,26,.18) 0%,transparent 60%); }
+.biShop { padding: 40px; display: flex; flex-direction: column; justify-content: space-between; background: #111; }
+.shopBottom { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+
+/* Card shared */
+.biIdx { font-family: var(--fm); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 10px; }
+.biTitle { font-family: var(--fb); font-weight: 600; font-size: clamp(22px,2.2vw,32px); letter-spacing: -.02em; line-height: 1.05; color: #fff; margin-bottom: 8px; }
+.biSub { font-size: 12px; color: rgba(255,255,255,.4); font-style: italic; font-family: var(--ff); margin-bottom: 18px; }
+.biTags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.biTag { font-family: var(--fm); font-size: 10px; letter-spacing: .06em; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.5); }
+.biTagVit { background: rgba(155,127,212,.12); border-color: rgba(155,127,212,.25); color: #7c5cbf; }
+.biTagShop { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.09); color: rgba(255,255,255,.45); }
+.biDesc { font-size: 13px; line-height: 1.75; margin-bottom: 22px; flex: 1; color: rgba(255,255,255,.55); }
+.biMetrics { display: flex; gap: 20px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.08); margin-bottom: 18px; }
+.biMetricsVit { border-color: rgba(155,127,212,.2); }
+.biMetricsShop { border-color: rgba(255,255,255,.07); margin-bottom: 0; }
+.bmVal { font-family: var(--fb); font-weight: 600; font-size: 18px; line-height: 1; color: #4ade80; }
+.bmValVit { color: #7c5cbf; }
+.bmLbl { font-family: var(--fm); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; margin-top: 3px; color: rgba(255,255,255,.3); }
+.bmLblVit { color: #9b7fd4; }
+.bmLblShop { color: rgba(255,255,255,.3); }
+.biCta { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; text-decoration: none; cursor: none; padding: 10px 20px; border-radius: 8px; transition: all .25s; width: fit-content; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.8); }
+.biCta:hover { background: rgba(255,255,255,.14); color: #fff; gap: 14px; }
+.biCtaVit { background: rgba(124,92,191,.12); border-color: rgba(124,92,191,.25); color: #7c5cbf; }
+.biCtaVit:hover { background: rgba(124,92,191,.2); }
+.biCtaShop { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.1); color: rgba(255,255,255,.75); }
+.biCtaShop:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+/* ── FinFlow phone ── */
+.ph { width: 160px; background: #0d1424; border-radius: 26px; padding: 16px 13px; box-shadow: 0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06); overflow: hidden; position: relative; z-index: 1; }
+.phNotch { width: 42px; height: 5px; background: #070e1a; border-radius: 3px; margin: 0 auto 13px; }
+.phLbl { font-family: var(--fm); font-size: 7px; letter-spacing: .14em; text-transform: uppercase; color: #475569; margin-bottom: 3px; }
+.phBal { font-size: 24px; font-weight: 300; color: #f1f5f9; letter-spacing: -.02em; margin-bottom: 2px; }
+.phChg { font-size: 9px; color: #4ade80; margin-bottom: 12px; }
+.phScreen { height: 130px; overflow: hidden; }
+.phScreenInner { transition: transform 1.2s cubic-bezier(.25,.46,.45,.94); }
+.phBars { display: flex; gap: 3px; align-items: flex-end; height: 40px; margin-bottom: 10px; }
+.phB { flex: 1; border-radius: 2px 2px 0 0; background: #21262d; }
+.lit { background: #1d8eff; }
+.phDiv { height: 1px; background: #21262d; margin-bottom: 8px; }
+.phRow { display: flex; justify-content: space-between; padding: 4px 0; font-size: 8px; color: #475569; border-bottom: 1px solid #0d1424; font-family: var(--fm); }
+.phNeg { color: #f85149; }
+.phPos { color: #4ade80; }
+.phScreen2 { padding-top: 10px; }
+.phCard { background: #131d2e; border-radius: 8px; padding: 9px; margin-bottom: 6px; }
+.phCardRow { display: flex; justify-content: space-between; font-size: 8px; font-family: var(--fm); color: #64748b; margin-bottom: 4px; }
+.phCardVal { font-size: 13px; font-weight: 500; color: #f1f5f9; }
+.phCardSub { font-size: 7.5px; color: #4ade80; }
+
+/* ── VitalPulse phone ── */
+.vph { width: 146px; background: #fff; border-radius: 22px; padding: 16px 12px; box-shadow: 0 28px 60px rgba(124,92,191,.22), 0 0 0 1px rgba(155,127,212,.18); overflow: hidden; position: relative; z-index: 1; }
+.vphNotch { width: 38px; height: 5px; background: #ede8f8; border-radius: 3px; margin: 0 auto 12px; }
+.vphGreet { font-size: 8.5px; color: #7c5cbf; margin-bottom: 10px; font-family: var(--fm); }
+.vphRingWrap { position: relative; width: 56px; height: 56px; margin: 0 auto 7px; }
+.vphRing { width: 56px; height: 56px; border-radius: 50%; border: 6px solid #ede8f8; border-top-color: #7c5cbf; border-right-color: #9b7fd4; position: absolute; }
+.vphScore { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #2d2040; }
+.vphMood { text-align: center; font-size: 8.5px; color: #9b7fd4; margin-bottom: 9px; font-family: var(--fm); }
+.vphScreen { height: 90px; overflow: hidden; }
+.vphScreenInner { transition: transform 1.2s cubic-bezier(.25,.46,.45,.94); }
+.vphGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.vphCell { background: #f5f0fb; border-radius: 6px; padding: 6px; text-align: center; }
+.vphCv { font-size: 11px; font-weight: 600; color: #7c5cbf; }
+.vphCk { font-size: 7px; color: #9d8cbf; letter-spacing: .1em; font-family: var(--fm); }
+.vphScreen2 { padding-top: 8px; }
+.vphRow { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0ebfc; font-family: var(--fm); font-size: 8px; color: #7c5cbf; }
+.vphRow span:last-child { color: #2d2040; font-weight: 500; }
+
+/* ── ShopRift phone ── */
+.eph { width: 150px; background: #1a1a1a; border-radius: 22px; overflow: hidden; box-shadow: 0 36px 72px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.05); position: relative; z-index: 1; }
+.ephImg { height: 90px; background: linear-gradient(135deg,#111,#252525); display: flex; align-items: center; justify-content: center; font-size: 38px; }
+.ephBody { padding: 11px; }
+.ephScreen { height: 100px; overflow: hidden; }
+.ephScreenInner { transition: transform 1.2s cubic-bezier(.25,.46,.45,.94); }
+.ephName { font-size: 9.5px; color: #e0e0e0; margin-bottom: 1px; }
+.ephSub { font-size: 7px; color: #555; margin-bottom: 7px; display: flex; justify-content: space-between; font-family: var(--fm); }
+.ephPr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.ephPrice { font-size: 18px; font-weight: 600; color: #c8401a; }
+.ephBadge { font-size: 7px; color: #c8401a; border: 1px solid #c8401a; padding: 2px 5px; border-radius: 2px; font-family: var(--fm); }
+.ephStars { font-size: 8px; color: #f59e0b; margin-bottom: 7px; }
+.ephBtn { background: #f0f0f0; color: #111; border: none; width: 100%; padding: 8px; font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; border-radius: 4px; font-family: var(--fm); cursor: pointer; }
+.ephScreen2 { padding-top: 8px; }
+.ephRatingRow { display: flex; gap: 5px; align-items: center; padding: 4px 0; border-bottom: 1px solid #222; font-size: 8px; font-family: var(--fm); color: #555; }
+.ephStarCol { color: #f59e0b; }
+.ephAuth { color: #888; margin-left: auto; }
+
+@media (max-width: 960px) {
+  .section { padding: 60px 20px; }
+  .bento { grid-template-columns: 1fr; }
+  .bcFin, .bcVit, .bcShop { grid-column: 1; }
+  .bcFin, .bcShop { grid-template-columns: 1fr; }
+  .bcShop { grid-template-columns: 1fr; }
+  .bv, .bvVit, .bvShop { min-height: 240px; }
+}

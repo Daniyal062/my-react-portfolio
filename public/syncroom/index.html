@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SyncRoom — Real-time Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body,#root{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:#f8fafc}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useReducer, useEffect, useRef, useState, useCallback } = React;
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const ROOMS = [
+  { id:'general',  name:'# general',     desc:'Team-wide announcements',   color:'#3b82f6', icon:'🏠' },
+  { id:'design',   name:'# design',      desc:'UI/UX feedback & mockups',  color:'#8b5cf6', icon:'🎨' },
+  { id:'frontend', name:'# frontend',    desc:'React, CSS, JS discussion', color:'#10b981', icon:'⚡' },
+  { id:'random',   name:'# random',      desc:'Off-topic chatter',         color:'#f59e0b', icon:'🎲' },
+];
+
+const BOT_NAMES = ['Aria','Nova','Echo','Lyra'];
+const BOT_AVATARS = { Aria:'#3b82f6', Nova:'#8b5cf6', Echo:'#10b981', Lyra:'#f59e0b' };
+
+const BOT_REPLIES = {
+  general: [
+    "Just pushed the weekly update to Notion — check it out 📋",
+    "Sprint review is at 4pm today, don't forget!",
+    "New client onboarded — Acme Corp 🎉",
+    "Anyone free for a quick sync this afternoon?",
+    "The Q4 numbers are looking great, nice work everyone.",
+  ],
+  design: [
+    "Figma file updated with the new component library 🎨",
+    "Can someone review the mobile nav prototype?",
+    "I've been using variables in Figma — game changer 💯",
+    "The client approved the dashboard mockups!",
+    "New font pairing looking fire btw 🔥",
+  ],
+  frontend: [
+    "useReducer really cleaned up that state logic 🙌",
+    "Anyone else using Tailwind v4? Worth the upgrade?",
+    "Just shipped the new search component, check main branch",
+    "React 19 RC just dropped, features look wild 👀",
+    "Hot tip: CSS container queries are finally usable everywhere",
+  ],
+  random: [
+    "Who's watching the game tonight? 🏆",
+    "Trying a new coffee spot downtown, highly recommend ☕",
+    "Found a great playlist for deep work — dropping the link",
+    "Friday deploy? Bold strategy 😅",
+    "Team lunch next Thursday, mark your calendars 🍜",
+  ],
+};
+
+const EMOJI_REACTIONS = ['👍','🔥','❤️','😂','🎉','👀','💯','🚀'];
+
+// ─── INITIAL STATE ───────────────────────────────────────────────────────────
+function makeInitialState() {
+  const now = Date.now();
+  return {
+    currentRoom: 'general',
+    currentUser: { id:'me', name:'You', avatar:'#c8401a' },
+    rooms: Object.fromEntries(ROOMS.map(r => [r.id, {
+      messages: [
+        { id:`${r.id}-1`, userId:'Aria', userName:'Aria', text: BOT_REPLIES[r.id][0], ts: now - 3600000, reactions:{}, pinned:false },
+        { id:`${r.id}-2`, userId:'Nova', userName:'Nova', text: BOT_REPLIES[r.id][1], ts: now - 1800000, reactions:{}, pinned:false },
+        { id:`${r.id}-3`, userId:'Echo', userName:'Echo', text: BOT_REPLIES[r.id][2], ts: now - 600000,  reactions:{}, pinned:false },
+      ],
+      unread: r.id === 'general' ? 0 : Math.floor(Math.random()*4)+1,
+      online: Math.floor(Math.random()*3)+2,
+    }])),
+  };
+}
+
+// ─── REDUCER ─────────────────────────────────────────────────────────────────
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_ROOM':
+      return {
+        ...state,
+        currentRoom: action.roomId,
+        rooms: {
+          ...state.rooms,
+          [action.roomId]: { ...state.rooms[action.roomId], unread: 0 },
+        },
+      };
+    case 'SEND_MESSAGE': {
+      const msg = {
+        id: `msg-${Date.now()}-${Math.random()}`,
+        userId: 'me', userName: 'You',
+        text: action.text, ts: Date.now(),
+        reactions: {}, pinned: false,
+      };
+      return {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          [state.currentRoom]: {
+            ...state.rooms[state.currentRoom],
+            messages: [...state.rooms[state.currentRoom].messages, msg],
+          },
+        },
+      };
+    }
+    case 'BOT_REPLY': {
+      const msg = {
+        id: `bot-${Date.now()}-${Math.random()}`,
+        userId: action.botName, userName: action.botName,
+        text: action.text, ts: Date.now(),
+        reactions: {}, pinned: false,
+      };
+      return {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          [action.roomId]: {
+            ...state.rooms[action.roomId],
+            messages: [...state.rooms[action.roomId].messages, msg],
+            unread: action.roomId !== state.currentRoom
+              ? state.rooms[action.roomId].unread + 1
+              : 0,
+          },
+        },
+      };
+    }
+    case 'REACT': {
+      const { roomId, msgId, emoji, userId } = action;
+      const room = state.rooms[roomId];
+      const msgs = room.messages.map(m => {
+        if (m.id !== msgId) return m;
+        const reacts = { ...m.reactions };
+        if (!reacts[emoji]) reacts[emoji] = [];
+        const i = reacts[emoji].indexOf(userId);
+        if (i > -1) reacts[emoji] = reacts[emoji].filter(u => u !== userId);
+        else reacts[emoji] = [...reacts[emoji], userId];
+        if (reacts[emoji].length === 0) delete reacts[emoji];
+        return { ...m, reactions: reacts };
+      });
+      return { ...state, rooms: { ...state.rooms, [roomId]: { ...room, messages: msgs } } };
+    }
+    case 'PIN': {
+      const { roomId, msgId } = action;
+      const room = state.rooms[roomId];
+      const msgs = room.messages.map(m => m.id === msgId ? { ...m, pinned: !m.pinned } : m);
+      return { ...state, rooms: { ...state.rooms, [roomId]: { ...room, messages: msgs } } };
+    }
+    case 'DELETE': {
+      const { roomId, msgId } = action;
+      const room = state.rooms[roomId];
+      const msgs = room.messages.filter(m => m.id !== msgId);
+      return { ...state, rooms: { ...state.rooms, [roomId]: { ...room, messages: msgs } } };
+    }
+    default: return state;
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+function formatDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  const y = new Date(now); y.setDate(y.getDate()-1);
+  if (d.toDateString() === y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString();
+}
+
+// ─── AVATAR ──────────────────────────────────────────────────────────────────
+function Avatar({ name, color, size=32 }) {
+  return (
+    <div style={{width:size,height:size,borderRadius:'50%',background:color,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      color:'#fff',fontSize:size*0.38,fontWeight:600,flexShrink:0,
+      fontFamily:'DM Sans,sans-serif'}}>
+      {name[0].toUpperCase()}
+    </div>
+  );
+}
+
+// ─── MESSAGE ─────────────────────────────────────────────────────────────────
+function Message({ msg, isMine, dispatch, roomId }) {
+  const [showActions, setShowActions] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
+  const color = isMine ? '#c8401a' : (BOT_AVATARS[msg.userName] || '#64748b');
+  const align = isMine ? 'flex-end' : 'flex-start';
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:align,marginBottom:2}}
+      onMouseEnter={() => setShowActions(true)} onMouseLeave={() => { setShowActions(false); setShowEmojis(false); }}>
+      {/* Pin indicator */}
+      {msg.pinned && (
+        <div style={{fontSize:10,color:'#f59e0b',marginBottom:2,display:'flex',alignItems:'center',gap:4}}>
+          📌 Pinned message
+        </div>
+      )}
+      <div style={{display:'flex',alignItems:'flex-end',gap:8,flexDirection:isMine?'row-reverse':'row'}}>
+        {!isMine && <Avatar name={msg.userName} color={color} size={28}/>}
+        <div style={{maxWidth:'68%'}}>
+          {!isMine && (
+            <div style={{fontSize:11,color:'#64748b',marginBottom:3,paddingLeft:2,fontFamily:'DM Mono,monospace'}}>
+              {msg.userName} · {formatTime(msg.ts)}
+            </div>
+          )}
+          <div style={{position:'relative'}}>
+            <div style={{
+              background: isMine ? '#c8401a' : '#f1f5f9',
+              color: isMine ? '#fff' : '#1e293b',
+              padding:'10px 14px', borderRadius:12,
+              borderBottomRightRadius: isMine ? 2 : 12,
+              borderBottomLeftRadius: isMine ? 12 : 2,
+              fontSize:13.5, lineHeight:1.55, fontFamily:'DM Sans,sans-serif',
+              wordBreak:'break-word',
+            }}>
+              {msg.text}
+            </div>
+            {isMine && (
+              <div style={{fontSize:10,color:'#94a3b8',textAlign:'right',marginTop:2,fontFamily:'DM Mono,monospace'}}>
+                {formatTime(msg.ts)}
+              </div>
+            )}
+            {/* Action bar */}
+            {showActions && (
+              <div style={{
+                position:'absolute', top:-36, right: isMine ? 0 : 'auto', left: isMine ? 'auto' : 0,
+                display:'flex', gap:4, background:'#fff', border:'1px solid #e2e8f0',
+                borderRadius:8, padding:'4px 6px', boxShadow:'0 4px 12px rgba(0,0,0,0.08)', zIndex:10,
+              }}>
+                <button title="React" onClick={() => setShowEmojis(e=>!e)}
+                  style={{background:'none',border:'none',cursor:'pointer',padding:'3px 6px',fontSize:14,borderRadius:4,transition:'background 0.15s'}}
+                  onMouseEnter={e=>e.target.style.background='#f1f5f9'} onMouseLeave={e=>e.target.style.background='none'}>
+                  😊
+                </button>
+                <button title={msg.pinned?'Unpin':'Pin'} onClick={() => dispatch({type:'PIN',roomId,msgId:msg.id})}
+                  style={{background:'none',border:'none',cursor:'pointer',padding:'3px 6px',fontSize:14,borderRadius:4,transition:'background 0.15s'}}
+                  onMouseEnter={e=>e.target.style.background='#f1f5f9'} onMouseLeave={e=>e.target.style.background='none'}>
+                  📌
+                </button>
+                {isMine && (
+                  <button title="Delete" onClick={() => dispatch({type:'DELETE',roomId,msgId:msg.id})}
+                    style={{background:'none',border:'none',cursor:'pointer',padding:'3px 6px',fontSize:14,borderRadius:4,transition:'background 0.15s',color:'#f87171'}}
+                    onMouseEnter={e=>e.target.style.background='#fff1f2'} onMouseLeave={e=>e.target.style.background='none'}>
+                    🗑
+                  </button>
+                )}
+              </div>
+            )}
+            {/* Emoji picker */}
+            {showEmojis && (
+              <div style={{
+                position:'absolute', top:-76, right: isMine ? 0 : 'auto', left: isMine ? 'auto' : 0,
+                display:'flex', gap:4, background:'#fff', border:'1px solid #e2e8f0',
+                borderRadius:10, padding:'6px 8px', boxShadow:'0 4px 16px rgba(0,0,0,0.1)', zIndex:20,
+              }}>
+                {EMOJI_REACTIONS.map(em => (
+                  <button key={em} onClick={() => { dispatch({type:'REACT',roomId,msgId:msg.id,emoji:em,userId:'me'}); setShowEmojis(false); }}
+                    style={{background:'none',border:'none',cursor:'pointer',fontSize:18,padding:'2px 4px',borderRadius:4,transition:'transform 0.1s'}}
+                    onMouseEnter={e=>e.target.style.transform='scale(1.3)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}>
+                    {em}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Reactions */}
+          {Object.keys(msg.reactions).length > 0 && (
+            <div style={{display:'flex',gap:4,marginTop:4,flexWrap:'wrap',justifyContent:isMine?'flex-end':'flex-start'}}>
+              {Object.entries(msg.reactions).filter(([,users])=>users.length>0).map(([em,users]) => (
+                <button key={em} onClick={() => dispatch({type:'REACT',roomId,msgId:msg.id,emoji:em,userId:'me'})}
+                  style={{background:users.includes('me')?'#fef3c7':'#f1f5f9',border:`1px solid ${users.includes('me')?'#fbbf24':'#e2e8f0'}`,
+                    borderRadius:12,padding:'2px 8px',fontSize:12,cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontFamily:'DM Mono,monospace'}}>
+                  {em} <span style={{fontSize:10,color:'#64748b'}}>{users.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ────────────────────────────────────────────────────────────────
+function App() {
+  const [state, dispatch] = useReducer(reducer, null, makeInitialState);
+  const [input, setInput] = useState('');
+  const [typing, setTyping] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showPinned, setShowPinned] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const msgEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const typingTimer = useRef(null);
+  const botTimer = useRef(null);
+
+  const room = ROOMS.find(r => r.id === state.currentRoom);
+  const roomData = state.rooms[state.currentRoom];
+  const pinnedMsgs = roomData.messages.filter(m => m.pinned);
+
+  // Filtered messages
+  const messages = search
+    ? roomData.messages.filter(m => m.text.toLowerCase().includes(search.toLowerCase()))
+    : roomData.messages;
+
+  // Auto-scroll
+  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior:'smooth' }); }, [messages]);
+
+  // Bot typing + reply after user sends
+  const triggerBot = useCallback((roomId) => {
+    clearTimeout(botTimer.current);
+    setTyping(true);
+    botTimer.current = setTimeout(() => {
+      const bot = BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];
+      const replies = BOT_REPLIES[roomId];
+      const text = replies[Math.floor(Math.random()*replies.length)];
+      dispatch({ type:'BOT_REPLY', botName:bot, text, roomId });
+      setTyping(false);
+    }, 1200 + Math.random()*1200);
+  }, []);
+
+  const sendMessage = useCallback(() => {
+    const text = input.trim();
+    if (!text) return;
+    dispatch({ type:'SEND_MESSAGE', text });
+    setInput('');
+    triggerBot(state.currentRoom);
+    inputRef.current?.focus();
+  }, [input, state.currentRoom, triggerBot]);
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  };
+
+  const totalUnread = Object.values(state.rooms).reduce((a,r) => a + r.unread, 0);
+
+  // Group messages by date
+  const grouped = messages.reduce((acc, msg) => {
+    const key = formatDate(msg.ts);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(msg);
+    return acc;
+  }, {});
+
+  return (
+    <div style={{display:'flex',height:'100vh',background:'#f8fafc',fontFamily:'DM Sans,sans-serif'}}>
+
+      {/* ── SIDEBAR ── */}
+      <div style={{width:sidebarOpen?260:0,flexShrink:0,background:'#1e293b',display:'flex',flexDirection:'column',overflow:'hidden',transition:'width 0.25s'}}>
+        {/* Workspace header */}
+        <div style={{padding:'18px 16px 14px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:20,letterSpacing:'0.08em',color:'#f1f5f9'}}>SYNCROOM</div>
+            {totalUnread > 0 && (
+              <div style={{background:'#c8401a',color:'#fff',fontSize:10,padding:'2px 7px',borderRadius:10,fontFamily:'DM Mono,monospace'}}>{totalUnread}</div>
+            )}
+          </div>
+          <div style={{fontSize:11,color:'#475569',marginTop:3,fontFamily:'DM Mono,monospace'}}>Design Team Workspace</div>
+        </div>
+        {/* Rooms list */}
+        <div style={{flex:1,overflowY:'auto',padding:'12px 8px'}}>
+          <div style={{fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:'#475569',padding:'4px 8px',marginBottom:6,fontFamily:'DM Mono,monospace'}}>Channels</div>
+          {ROOMS.map(r => {
+            const rd = state.rooms[r.id];
+            const active = state.currentRoom === r.id;
+            return (
+              <button key={r.id} onClick={() => dispatch({type:'SET_ROOM',roomId:r.id})}
+                style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:6,
+                  background:active?'rgba(255,255,255,0.08)':'none',border:'none',cursor:'pointer',
+                  transition:'background 0.15s',textAlign:'left',marginBottom:1}}>
+                <span style={{fontSize:14}}>{r.icon}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,color:active?'#f1f5f9':'#94a3b8',fontWeight:active?600:400,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                    {r.name}
+                  </div>
+                </div>
+                {rd.unread > 0 && !active && (
+                  <div style={{background:r.color,color:'#fff',fontSize:10,minWidth:18,height:18,borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'DM Mono,monospace',padding:'0 5px'}}>
+                    {rd.unread}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {/* User footer */}
+        <div style={{padding:'12px 16px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:30,height:30,borderRadius:'50%',background:'#c8401a',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:12,fontWeight:600}}>Y</div>
+          <div>
+            <div style={{fontSize:12,color:'#f1f5f9',fontWeight:500}}>You</div>
+            <div style={{fontSize:10,color:'#10b981',display:'flex',alignItems:'center',gap:4,fontFamily:'DM Mono,monospace'}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:'#10b981',display:'inline-block'}}></span> Online
+            </div>
+          </div>
+          <a href="../index.html" style={{marginLeft:'auto',fontSize:10,color:'#475569',textDecoration:'none',
+            border:'1px solid #334155',padding:'4px 8px',borderRadius:3,fontFamily:'DM Mono,monospace',transition:'color 0.2s'}}
+            onMouseEnter={e=>e.target.style.color='#f1f5f9'} onMouseLeave={e=>e.target.style.color='#475569'}>
+            ← Back
+          </a>
+        </div>
+      </div>
+
+      {/* ── MAIN CHAT AREA ── */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+
+        {/* Channel header */}
+        <div style={{height:56,borderBottom:'1px solid #e2e8f0',background:'#fff',display:'flex',alignItems:'center',padding:'0 20px',gap:12,flexShrink:0}}>
+          <button onClick={() => setSidebarOpen(s=>!s)}
+            style={{background:'none',border:'none',cursor:'pointer',fontSize:18,color:'#64748b',padding:'4px',borderRadius:4}}
+            title="Toggle sidebar">☰</button>
+          <span style={{fontSize:18}}>{room.icon}</span>
+          <div>
+            <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>{room.name}</div>
+            <div style={{fontSize:11,color:'#64748b',fontFamily:'DM Mono,monospace'}}>{room.desc} · {roomData.online} online</div>
+          </div>
+          <div style={{marginLeft:'auto',display:'flex',gap:8,alignItems:'center'}}>
+            {showSearch && (
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search messages…"
+                autoFocus onBlur={() => { if(!search) setShowSearch(false); }}
+                style={{border:'1px solid #e2e8f0',borderRadius:6,padding:'6px 12px',fontSize:12,outline:'none',
+                  fontFamily:'DM Mono,monospace',color:'#1e293b',background:'#f8fafc',width:200,transition:'width 0.2s'}}/>
+            )}
+            <button onClick={() => { setShowSearch(s=>!s); if(showSearch) setSearch(''); }}
+              style={{background:'none',border:'1px solid #e2e8f0',borderRadius:6,padding:'6px 10px',cursor:'pointer',fontSize:14}}
+              title="Search">🔍</button>
+            <button onClick={() => setShowPinned(s=>!s)}
+              style={{background:showPinned?'#fef3c7':'none',border:`1px solid ${showPinned?'#fbbf24':'#e2e8f0'}`,
+                borderRadius:6,padding:'6px 10px',cursor:'pointer',fontSize:14,position:'relative'}}
+              title="Pinned messages">
+              📌
+              {pinnedMsgs.length > 0 && (
+                <span style={{position:'absolute',top:-4,right:-4,background:'#f59e0b',color:'#fff',fontSize:9,width:16,height:16,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'DM Mono,monospace'}}>{pinnedMsgs.length}</span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+          {/* Messages */}
+          <div style={{flex:1,overflowY:'auto',padding:'24px 24px 12px',display:'flex',flexDirection:'column',gap:8}}>
+            {search && messages.length === 0 && (
+              <div style={{textAlign:'center',color:'#94a3b8',fontSize:13,marginTop:80,fontFamily:'DM Mono,monospace'}}>
+                No messages matching "{search}"
+              </div>
+            )}
+            {!search && (
+              <div style={{textAlign:'center',marginBottom:24}}>
+                <div style={{fontSize:32,marginBottom:8}}>{room.icon}</div>
+                <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:28,color:'#1e293b',letterSpacing:'0.06em'}}>{room.name.toUpperCase()}</div>
+                <div style={{fontSize:13,color:'#64748b',marginTop:4}}>{room.desc}</div>
+              </div>
+            )}
+            {Object.entries(grouped).map(([date, msgs]) => (
+              <div key={date}>
+                <div style={{display:'flex',alignItems:'center',gap:12,margin:'16px 0 12px'}}>
+                  <div style={{flex:1,height:1,background:'#e2e8f0'}}/>
+                  <div style={{fontSize:11,color:'#94a3b8',fontFamily:'DM Mono,monospace',padding:'2px 10px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10}}>{date}</div>
+                  <div style={{flex:1,height:1,background:'#e2e8f0'}}/>
+                </div>
+                {msgs.map(msg => (
+                  <Message key={msg.id} msg={msg} isMine={msg.userId==='me'} dispatch={dispatch} roomId={state.currentRoom}/>
+                ))}
+              </div>
+            ))}
+            {/* Typing indicator */}
+            {typing && state.currentRoom === state.currentRoom && (
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11}}>B</div>
+                <div style={{background:'#f1f5f9',borderRadius:12,borderBottomLeftRadius:2,padding:'10px 14px',display:'flex',gap:4,alignItems:'center'}}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'#94a3b8',animation:`bounce 1s ${i*0.15}s infinite`}}/>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={msgEndRef}/>
+          </div>
+
+          {/* Pinned panel */}
+          {showPinned && (
+            <div style={{width:280,borderLeft:'1px solid #e2e8f0',background:'#fff',display:'flex',flexDirection:'column',flexShrink:0}}>
+              <div style={{padding:'16px 18px',borderBottom:'1px solid #e2e8f0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div style={{fontWeight:600,fontSize:13,color:'#1e293b'}}>📌 Pinned ({pinnedMsgs.length})</div>
+                <button onClick={() => setShowPinned(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8',fontSize:16}}>✕</button>
+              </div>
+              <div style={{flex:1,overflowY:'auto',padding:12}}>
+                {pinnedMsgs.length === 0 ? (
+                  <div style={{fontSize:12,color:'#94a3b8',textAlign:'center',marginTop:40,fontFamily:'DM Mono,monospace'}}>
+                    No pinned messages.<br/>Hover a message and click 📌
+                  </div>
+                ) : pinnedMsgs.map(msg => (
+                  <div key={msg.id} style={{background:'#fefce8',border:'1px solid #fde68a',borderRadius:8,padding:'10px 12px',marginBottom:8}}>
+                    <div style={{fontSize:11,color:'#92400e',marginBottom:4,fontFamily:'DM Mono,monospace'}}>{msg.userName} · {formatTime(msg.ts)}</div>
+                    <div style={{fontSize:12,color:'#1e293b',lineHeight:1.5}}>{msg.text}</div>
+                    <button onClick={() => dispatch({type:'PIN',roomId:state.currentRoom,msgId:msg.id})}
+                      style={{background:'none',border:'none',cursor:'pointer',fontSize:10,color:'#b45309',marginTop:6,fontFamily:'DM Mono,monospace'}}>
+                      Unpin
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div style={{padding:'12px 24px 16px',borderTop:'1px solid #e2e8f0',background:'#fff'}}>
+          <div style={{display:'flex',gap:10,alignItems:'flex-end',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'8px 12px',transition:'border-color 0.2s'}}>
+            <textarea value={input} ref={inputRef}
+              onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+              placeholder={`Message ${room.name}…`}
+              rows={1}
+              style={{flex:1,border:'none',outline:'none',background:'none',fontFamily:'DM Sans,sans-serif',fontSize:14,color:'#1e293b',resize:'none',lineHeight:1.5,maxHeight:120,overflowY:'auto'}}
+              onInput={e => { e.target.style.height='auto'; e.target.style.height=Math.min(e.target.scrollHeight, 120)+'px'; }}/>
+            <button onClick={sendMessage} disabled={!input.trim()}
+              style={{background:input.trim()?'#c8401a':'#e2e8f0',color:'#fff',border:'none',borderRadius:7,
+                padding:'8px 16px',cursor:input.trim()?'pointer':'default',fontSize:13,fontFamily:'DM Mono,monospace',
+                letterSpacing:'0.08em',transition:'background 0.2s',flexShrink:0}}>
+              Send
+            </button>
+          </div>
+          <div style={{fontSize:10,color:'#94a3b8',marginTop:6,fontFamily:'DM Mono,monospace',paddingLeft:2}}>
+            Enter to send · Shift+Enter for newline · Hover messages for actions
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-5px); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
