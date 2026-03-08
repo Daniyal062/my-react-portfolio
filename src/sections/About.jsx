@@ -14,6 +14,9 @@ const devSkills = [
   ['React', '76%'],
   ['React Native', '70%'],
   ['REST APIs', '74%'],
+  ['Node.js', '78%'],
+  ['Express', '72%'],
+  ['MongoDB', '68%'],
 ]
 
 function SkillGroup({ label, skills }) {
@@ -52,9 +55,9 @@ export default function About() {
       <div className="reveal">
         <h2 className={styles.name}>Daniyal<em className={styles.nameEm}>Maqsood.</em></h2>
         <p className={styles.bio}>
-          Freelance designer and developer based in Pakistan. I work at the intersection
-          of research and engineering — prototyping in Figma by day, shipping React by
-          night. Research-first, aesthetics-always.
+          Freelance designer and full stack developer based in Pakistan. I work at the intersection
+          of research and engineering — prototyping in Figma by day, building MERN stack
+          products by night. Research-first, aesthetics-always.
         </p>
         <div className={styles.links}>
           <a className={styles.link} href="mailto:daniyalmaqsood025@gmail.com.com">Email ↗</a>

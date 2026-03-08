@@ -3,6 +3,7 @@ import styles from './Ticker.module.css'
 const SKILLS = [
   'Figma','React','User Research','HTML & CSS','JavaScript',
   'Prototyping','Design Systems','React Native','Interaction Design','REST APIs',
+  'Node.js','Express','MongoDB','MERN Stack','Full Stack Development',
 ]
 
 export default function Ticker() {

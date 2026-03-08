@@ -18,7 +18,7 @@ export default function Nav() {
       </a>
       <div className={styles.right}>
         <a className={styles.link} href="#uiux">Work</a>
-        <a className={styles.link} href="#frontend">Code</a>
+        <a className={styles.link} href="#fullstack">Full&nbsp;Stack</a>
         <a className={styles.link} href="#about">About</a>
         <a className={styles.link} href="#contact">Contact</a>
       </div>

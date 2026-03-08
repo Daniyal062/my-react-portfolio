@@ -1,6 +1,6 @@
 # Daniyal Maqsood — Portfolio
 
-UI/UX Designer & Frontend Developer portfolio built with **React + Vite**.
+UI/UX Designer & Full Stack Developer portfolio built with **React + Vite**.
 
 ## Tech Stack
 

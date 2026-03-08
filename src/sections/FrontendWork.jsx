@@ -68,7 +68,7 @@ function SyncRoomPreview() {
       </div>
       <div style={{display:'flex',flex:1,overflow:'hidden'}}>
         <div className={styles.pvcRooms}>
-          {['# general','# design','# frontend','# random'].map((r,i) => (
+          {['# general','# design','# fullstack','# random'].map((r,i) => (
             <div key={r} className={`${styles.pvcRoom} ${i===0 ? styles.pvcRoomAct : ''}`}>{r}</div>
           ))}
         </div>
@@ -110,9 +110,9 @@ const previews = { databoard: DataboardPreview, syncroom: SyncRoomPreview, wayfa
 
 export default function FrontendWork() {
   return (
-    <section id="frontend" className={styles.section}>
+    <section id="fullstack" className={styles.section}>
       <div className={`${styles.secHdr} reveal`}>
-        <div className={styles.secLbl}>Frontend Development</div>
+        <div className={styles.secLbl}>Full Stack Development</div>
         <div className={styles.secCount}>03 Projects</div>
       </div>
       <h2 className={`${styles.title} reveal d1`}>

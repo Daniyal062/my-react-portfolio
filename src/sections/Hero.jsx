@@ -5,7 +5,7 @@ export default function Hero() {
     <section id="hero" className={styles.hero}>
       <div className={styles.top}>
         <div className={styles.tag}>
-          UI/UX Designer &amp; Frontend Developer &nbsp;·&nbsp;{' '}
+          UI/UX Designer &amp; Full Stack Developer &nbsp;·&nbsp;{' '}
           <span className={styles.tagAccent}>Pakistan</span>
         </div>
         <h1 className={styles.name}>

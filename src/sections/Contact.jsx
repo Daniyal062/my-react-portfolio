@@ -14,7 +14,7 @@ export default function Contact() {
         <div className={styles.inner}>
           <div className="reveal">
             <h2 className={styles.hl}>Let's build<br /><em className={styles.hlEm}>together.</em></h2>
-            <p className={styles.sub}>Open to freelance projects in UI/UX design and frontend development. I keep my client list small so every project gets real attention.</p>
+            <p className={styles.sub}>Open to freelance projects in UI/UX design and full stack development. I keep my client list small so every project gets real attention.</p>
           </div>
           <div className={`${styles.list} reveal d1`}>
             {links.map(l => (
@@ -31,7 +31,7 @@ export default function Contact() {
       </section>
       <footer className={styles.footer}>
         <span>© 2025 Daniyal Maqsood</span>
-        <span>UI/UX · Frontend · Freelance · Pakistan</span>
+        <span>UI/UX · Full Stack · MERN · Freelance · Pakistan</span>
       </footer>
     </>
   )
