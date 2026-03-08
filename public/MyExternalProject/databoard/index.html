@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Databoard — Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-dark:#0f172a;--surf:#1e293b;--surf2:#334155;
+  --blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#f87171;
+  --text:#f1f5f9;--sub:#64748b;--border:#334155;
+  --bg-light:#f8fafc;--surf-light:#ffffff;--surf2-light:#f0f4f8;
+  --text-light:#1e293b;--sub-light:#94a3b8;--border-light:#e2e8f0;
+  --mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;
+}
+html,body,#root{height:100%}
+body{font-family:var(--mono);overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surf2);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS  = { revenue:'#3b82f6', users:'#10b981', conversions:'#f59e0b' };
+const METRIC_LABELS = { revenue:'Total Revenue', users:'Total Users', conversions:'Avg Conversion' };
+const METRIC_FMT = {
+  revenue:     v => '$' + (v/1000).toFixed(1) + 'k',
+  users:       v => (v/1000).toFixed(1) + 'k',
+  conversions: v => v.toFixed(1) + '%',
+};
+
+const TRANSACTIONS = [
+  {id:1, name:'Stripe — Monthly Subscriptions', type:'income',  cat:'Revenue',        amount:4200,  date:'Today, 2:14 PM'},
+  {id:2, name:'AWS EC2 + S3 Services',          type:'expense', cat:'Infrastructure', amount:840,   date:'Today, 11:30 AM'},
+  {id:3, name:'Figma Team Plan',                type:'expense', cat:'Tools',          amount:45,    date:'Yesterday'},
+  {id:4, name:'Client — Acme Corp (Project)',   type:'income',  cat:'Revenue',        amount:12000, date:'Dec 28'},
+  {id:5, name:'Vercel Pro Hosting',             type:'expense', cat:'Infrastructure', amount:20,    date:'Dec 27'},
+  {id:6, name:'Client — BlueWave Studio',       type:'income',  cat:'Revenue',        amount:5500,  date:'Dec 25'},
+  {id:7, name:'Notion Team Plan',               type:'expense', cat:'Tools',          amount:16,    date:'Dec 24'},
+  {id:8, name:'Client — Nexus Media',           type:'income',  cat:'Revenue',        amount:8200,  date:'Dec 20'},
+  {id:9, name:'Linear Pro',                     type:'expense', cat:'Tools',          amount:8,     date:'Dec 19'},
+  {id:10,name:'Client — Spark Labs',            type:'income',  cat:'Revenue',        amount:6800,  date:'Dec 15'},
+];
+
+// ─── DATA GENERATION ─────────────────────────────────────────────────────────
+function genData() {
+  return MONTHS.map(month => ({
+    month,
+    revenue:     Math.floor(55000 + Math.random() * 85000),
+    users:       Math.floor(7000  + Math.random() * 13000),
+    conversions: parseFloat((2.2  + Math.random() * 3.2).toFixed(2)),
+  }));
+}
+
+// ─── SVG LINE CHART ──────────────────────────────────────────────────────────
+function LineChart({ data, metric, color, dark }) {
+  const [tooltip, setTooltip] = useState(null);
+  const W=580, H=110, PL=44, PR=16, PT=8, PB=22;
+  const vals = data.map(d => d[metric]);
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const range = max - min || 1;
+  const pts = data.map((d,i) => ({
+    x: PL + i * ((W-PL-PR)/(data.length-1)),
+    y: PT + (1 - (d[metric]-min)/range)*(H-PT-PB),
+    v: d[metric], m: d.month,
+  }));
+  const lineD = pts.map((p,i) => (i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`)).join(' ');
+  const areaD = `${lineD} L${pts[pts.length-1].x},${H-PB} L${pts[0].x},${H-PB}Z`;
+  const gridColor = dark ? '#1e293b' : '#f0f4f8';
+  const labelColor = dark ? '#475569' : '#94a3b8';
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:110,overflow:'visible'}}>
+      <defs>
+        <linearGradient id={`lg-${metric}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.22"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      {[0,0.5,1].map(t => {
+        const y = PT + (1-t)*(H-PT-PB);
+        const v = min + t*range;
+        return <g key={t}>
+          <line x1={PL} x2={W-PR} y1={y} y2={y} stroke={gridColor} strokeWidth="1"/>
+          <text x={PL-4} y={y+4} textAnchor="end" fontSize="8" fill={labelColor} fontFamily="DM Mono,monospace">
+            {METRIC_FMT[metric](v)}
+          </text>
+        </g>;
+      })}
+      <path d={areaD} fill={`url(#lg-${metric})`}/>
+      <path d={lineD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {pts.map((p,i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r="8" fill="transparent"
+            onMouseEnter={() => setTooltip(p)} onMouseLeave={() => setTooltip(null)}
+            style={{cursor:'crosshair'}}/>
+          <circle cx={p.x} cy={p.y} r={tooltip?.m===p.m ? 5 : 3.5}
+            fill={color} stroke={dark?'#0f172a':'#f8fafc'} strokeWidth="2"
+            style={{transition:'r 0.15s', pointerEvents:'none'}}/>
+          <text x={p.x} y={H-3} textAnchor="middle" fontSize="7.5"
+            fill={labelColor} fontFamily="DM Mono,monospace" style={{pointerEvents:'none'}}>
+            {p.m}
+          </text>
+        </g>
+      ))}
+      {tooltip && (
+        <g>
+          <rect x={tooltip.x-34} y={tooltip.y-28} width={68} height={20} fill={dark?'#1e293b':'#fff'} rx="4" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
+          <text x={tooltip.x} y={tooltip.y-14} textAnchor="middle" fontSize="9.5" fill={dark?'#f1f5f9':'#1e293b'} fontFamily="DM Mono,monospace" fontWeight="500">
+            {METRIC_FMT[metric](tooltip.v)}
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ─── BAR CHART ───────────────────────────────────────────────────────────────
+function BarChart({ data, metric, color, dark }) {
+  const [hov, setHov] = useState(null);
+  const max = Math.max(...data.map(d => d[metric]));
+  const surf2 = dark ? '#334155' : '#e2e8f0';
+  return (
+    <div style={{display:'flex',gap:4,alignItems:'flex-end',height:80}}>
+      {data.map((d,i) => {
+        const h = Math.max(4, (d[metric]/max)*76);
+        return (
+          <div key={i} title={`${d.month}: ${METRIC_FMT[metric](d[metric])}`}
+            onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}
+            style={{flex:1, height:h, borderRadius:'2px 2px 0 0',
+              background: hov===i ? color : surf2,
+              transition:'background 0.2s, height 0.4s', cursor:'default'}}/>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── DONUT CHART ─────────────────────────────────────────────────────────────
+function DonutChart({ data, dark }) {
+  const cats = {};
+  data.forEach(tx => {
+    if (tx.type === 'expense') cats[tx.cat] = (cats[tx.cat]||0) + tx.amount;
+  });
+  const total = Object.values(cats).reduce((a,b) => a+b, 0);
+  const catColors = {'Infrastructure':'#3b82f6','Tools':'#10b981','Other':'#f59e0b'};
+  let cumAngle = -90;
+  const slices = Object.entries(cats).map(([k,v]) => {
+    const pct = v/total;
+    const startAngle = cumAngle;
+    cumAngle += pct * 360;
+    return {name:k, value:v, pct, startAngle, endAngle:cumAngle, color:catColors[k]||'#6366f1'};
+  });
+  function polarToXY(cx,cy,r,deg) {
+    const rad = (deg*Math.PI)/180;
+    return {x: cx+r*Math.cos(rad), y: cy+r*Math.sin(rad)};
+  }
+  function slicePath(s) {
+    const c={x:60,y:60}, r=50, ir=30;
+    const p1=polarToXY(c.x,c.y,r,s.startAngle);
+    const p2=polarToXY(c.x,c.y,r,s.endAngle);
+    const p3=polarToXY(c.x,c.y,ir,s.endAngle);
+    const p4=polarToXY(c.x,c.y,ir,s.startAngle);
+    const large = (s.endAngle-s.startAngle)>180?1:0;
+    return `M${p1.x},${p1.y} A${r},${r},0,${large},1,${p2.x},${p2.y} L${p3.x},${p3.y} A${ir},${ir},0,${large},0,${p4.x},${p4.y} Z`;
+  }
+  const textColor = dark ? '#94a3b8' : '#64748b';
+  const centerColor = dark ? '#f1f5f9' : '#1e293b';
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:20}}>
+      <svg viewBox="0 0 120 120" style={{width:120,height:120,flexShrink:0}}>
+        {slices.map(s => <path key={s.name} d={slicePath(s)} fill={s.color} opacity="0.85"/>)}
+        <text x="60" y="57" textAnchor="middle" fontSize="9" fill={textColor} fontFamily="DM Mono,monospace">SPENT</text>
+        <text x="60" y="70" textAnchor="middle" fontSize="11" fill={centerColor} fontFamily="DM Mono,monospace" fontWeight="500">${total.toLocaleString()}</text>
+      </svg>
+      <div style={{flex:1}}>
+        {slices.map(s => (
+          <div key={s.name} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 0',borderBottom:`1px solid ${dark?'#1e293b':'#f0f4f8'}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:s.color}}/>
+              <span style={{fontSize:11,color:textColor}}>{s.name}</span>
+            </div>
+            <span style={{fontSize:11,color:dark?'#f87171':'#ef4444'}}>${s.value.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── KPI CARD ────────────────────────────────────────────────────────────────
+function KPICard({ label, value, delta, deltaPos, color, active, onClick, dark }) {
+  const s = dark
+    ? {bg:active?'#1e293b':'#1e293b', border:active?color:'#334155', text:'#f1f5f9', sub:'#64748b'}
+    : {bg:'#ffffff', border:active?color:'#e2e8f0', text:'#1e293b', sub:'#94a3b8'};
+  return (
+    <div onClick={onClick} style={{
+      background:s.bg, border:`1px solid ${s.border}`,
+      padding:20, borderRadius:6, cursor:'pointer',
+      transition:'border-color 0.2s, box-shadow 0.2s',
+      boxShadow: active ? `0 0 0 2px ${color}22` : 'none',
+    }}>
+      <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:s.sub,marginBottom:8}}>{label}</div>
+      <div style={{fontSize:30,color:active?color:s.text,lineHeight:1,transition:'color 0.2s',fontWeight:300}}>{value}</div>
+      <div style={{fontSize:11,color:deltaPos?'#10b981':'#f87171',marginTop:6}}>
+        {deltaPos?'↑':'↓'} {delta}
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ────────────────────────────────────────────────────────────────
+function App() {
+  const [data, setData]         = useState(() => genData());
+  const [metric, setMetric]     = useState('revenue');
+  const [dark, setDark]         = useState(true);
+  const [live, setLive]         = useState(false);
+  const [liveCount, setLiveCount] = useState(0);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [txFilter, setTxFilter] = useState('all');
+  const intervalRef = useRef(null);
+
+  // Live mode
+  useEffect(() => {
+    if (live) {
+      intervalRef.current = setInterval(() => {
+        setData(prev => {
+          const next = [...prev];
+          const i = Math.floor(Math.random()*12);
+          next[i] = {...next[i],
+            revenue: Math.floor(55000 + Math.random()*85000),
+            users: Math.floor(7000 + Math.random()*13000),
+            conversions: parseFloat((2.2 + Math.random()*3.2).toFixed(2)),
+          };
+          return next;
+        });
+        setLiveCount(c => c+1);
+      }, 2000);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [live]);
+
+  const totals = useMemo(() => ({
+    revenue:     data.reduce((a,b) => a+b.revenue, 0),
+    users:       data.reduce((a,b) => a+b.users, 0),
+    conversions: data.reduce((a,b) => a+b.conversions, 0)/12,
+  }), [data]);
+
+  const exportCSV = useCallback(() => {
+    const rows = ['Month,Revenue,Users,Conversions', ...data.map(d=>`${d.month},${d.revenue},${d.users},${d.conversions}`)];
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
+    a.download = 'databoard-export.csv';
+    a.click();
+  }, [data]);
+
+  const filteredTx = txFilter === 'all' ? TRANSACTIONS
+    : TRANSACTIONS.filter(t => t.type === txFilter);
+
+  // Theme tokens
+  const bg    = dark ? '#0f172a' : '#f8fafc';
+  const surf  = dark ? '#1e293b' : '#ffffff';
+  const surf2 = dark ? '#334155' : '#f0f4f8';
+  const bdr   = dark ? '#334155' : '#e2e8f0';
+  const txt   = dark ? '#f1f5f9' : '#1e293b';
+  const sub   = dark ? '#64748b' : '#94a3b8';
+  const btn   = {background:surf2,border:`1px solid ${bdr}`,color:sub,
+    padding:'8px 16px',fontFamily:'DM Mono,monospace',fontSize:11,
+    letterSpacing:'0.1em',cursor:'pointer',borderRadius:3};
+
+  return (
+    <div style={{fontFamily:'DM Mono,monospace',background:bg,minHeight:'100vh',color:txt,transition:'background 0.3s'}}>
+
+      {/* ── TOPBAR ── */}
+      <div style={{borderBottom:`1px solid ${bdr}`,padding:'0 32px',background:surf,display:'flex',alignItems:'center',justifyContent:'space-between',height:56}}>
+        <div style={{display:'flex',alignItems:'center',gap:32}}>
+          <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:22,letterSpacing:'0.08em',color:txt}}>DATABOARD</div>
+          {['overview','transactions','reports'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              style={{background:'none',border:'none',color:activeTab===tab?COLORS.revenue:sub,
+                fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',cursor:'pointer',
+                padding:'0 4px',borderBottom:activeTab===tab?`2px solid ${COLORS.revenue}`:'2px solid transparent',
+                paddingBottom:4}}>
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:10,alignItems:'center'}}>
+          {live && <span style={{fontSize:11,color:'#10b981'}}>● LIVE · {liveCount} updates</span>}
+          <button style={{...btn,color:live?'#10b981':sub,borderColor:live?'#10b981':bdr}}
+            onClick={() => setLive(l=>!l)}>{live?'⏹ Stop':'▶ Live'}</button>
+          <button style={btn} onClick={() => setDark(d=>!d)}>{dark?'☀ Light':'● Dark'}</button>
+          <button style={{...btn,background:'#3b82f6',border:'none',color:'#fff'}}
+            onClick={() => setData(genData())}>↻ Refresh</button>
+          <button style={btn} onClick={exportCSV}>⬇ CSV</button>
+          <a href="../index.html" style={{...btn,textDecoration:'none',display:'inline-block'}}>← Portfolio</a>
+        </div>
+      </div>
+
+      <div style={{padding:32}}>
+
+        {activeTab === 'overview' && <>
+          {/* ── KPI ROW ── */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
+            <KPICard label="Total Revenue" value={METRIC_FMT.revenue(totals.revenue)}
+              delta="14.2% vs last year" deltaPos color={COLORS.revenue}
+              active={metric==='revenue'} onClick={() => setMetric('revenue')} dark={dark}/>
+            <KPICard label="Total Users" value={METRIC_FMT.users(totals.users)}
+              delta="8.7% vs last year" deltaPos color={COLORS.users}
+              active={metric==='users'} onClick={() => setMetric('users')} dark={dark}/>
+            <KPICard label="Avg Conversion" value={METRIC_FMT.conversions(totals.conversions)}
+              delta="0.4% vs last year" deltaPos color={COLORS.conversions}
+              active={metric==='conversions'} onClick={() => setMetric('conversions')} dark={dark}/>
+          </div>
+
+          {/* ── CHARTS ROW ── */}
+          <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:24}}>
+            <div style={{background:surf,border:`1px solid ${bdr}`,padding:24,borderRadius:6}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                <div>
+                  <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:sub,marginBottom:4}}>
+                    {METRIC_LABELS[metric]} — 2024
+                  </div>
+                  <div style={{fontSize:20,color:COLORS[metric]}}>
+                    {METRIC_FMT[metric](totals[metric])}
+                  </div>
+                </div>
+                <div style={{display:'flex',gap:6}}>
+                  {Object.keys(COLORS).map(m => (
+                    <button key={m} onClick={() => setMetric(m)}
+                      style={{background:metric===m?`${COLORS[m]}22`:'none',border:`1px solid ${metric===m?COLORS[m]:bdr}`,
+                        color:metric===m?COLORS[m]:sub,padding:'5px 12px',fontSize:10,
+                        letterSpacing:'0.1em',textTransform:'uppercase',cursor:'pointer',borderRadius:3,fontFamily:'DM Mono,monospace'}}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <LineChart data={data} metric={metric} color={COLORS[metric]} dark={dark}/>
+            </div>
+            <div style={{background:surf,border:`1px solid ${bdr}`,padding:24,borderRadius:6}}>
+              <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:sub,marginBottom:16}}>
+                Monthly Bars
+              </div>
+              <BarChart data={data} metric={metric} color={COLORS[metric]} dark={dark}/>
+              <div style={{fontSize:10,color:sub,marginTop:12,lineHeight:1.6}}>
+                Hover bars for values.<br/>Click KPI cards to switch metric.
+              </div>
+              <div style={{marginTop:16,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                {[{l:'Best Month',v:MONTHS[data.indexOf(data.reduce((a,b)=>a[metric]>b[metric]?a:b))]},
+                  {l:'Worst Month',v:MONTHS[data.indexOf(data.reduce((a,b)=>a[metric]<b[metric]?a:b))]},
+                  {l:'Peak Value',v:METRIC_FMT[metric](Math.max(...data.map(d=>d[metric])))},
+                  {l:'Low Value',v:METRIC_FMT[metric](Math.min(...data.map(d=>d[metric])))},
+                ].map(item => (
+                  <div key={item.l} style={{background:surf2,borderRadius:4,padding:'10px 12px'}}>
+                    <div style={{fontSize:9,color:sub,letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:4}}>{item.l}</div>
+                    <div style={{fontSize:13,color:txt}}>{item.v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── SPENDING + RECENT TX ── */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 2fr',gap:16}}>
+            <div style={{background:surf,border:`1px solid ${bdr}`,padding:24,borderRadius:6}}>
+              <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:sub,marginBottom:16}}>
+                Expense Breakdown
+              </div>
+              <DonutChart data={TRANSACTIONS} dark={dark}/>
+            </div>
+            <div style={{background:surf,border:`1px solid ${bdr}`,borderRadius:6,overflow:'hidden'}}>
+              <div style={{padding:'16px 24px',borderBottom:`1px solid ${bdr}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:sub}}>Recent Transactions</div>
+                <div style={{display:'flex',gap:6}}>
+                  {['all','income','expense'].map(f => (
+                    <button key={f} onClick={() => setTxFilter(f)}
+                      style={{background:txFilter===f?surf2:'none',border:`1px solid ${txFilter===f?bdr:'transparent'}`,
+                        color:txFilter===f?txt:sub,padding:'4px 10px',fontSize:10,
+                        letterSpacing:'0.1em',textTransform:'uppercase',cursor:'pointer',borderRadius:2,fontFamily:'DM Mono,monospace'}}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {filteredTx.map(tx => (
+                <div key={tx.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+                  padding:'13px 24px',borderBottom:`1px solid ${bdr}`,transition:'background 0.15s'}}
+                  onMouseEnter={e => e.currentTarget.style.background=surf2}
+                  onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                  <div style={{display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:34,height:34,borderRadius:'50%',flexShrink:0,
+                      background:tx.type==='income'?'rgba(16,185,129,0.12)':'rgba(248,113,113,0.12)',
+                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>
+                      {tx.type==='income'?'↑':'↓'}
+                    </div>
+                    <div>
+                      <div style={{fontSize:12,color:txt}}>{tx.name}</div>
+                      <div style={{fontSize:10,color:sub,marginTop:2}}>{tx.cat} · {tx.date}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:13,fontWeight:500,color:tx.type==='income'?'#10b981':'#f87171'}}>
+                    {tx.type==='income'?'+':'-'}${tx.amount.toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>}
+
+        {activeTab === 'transactions' && (
+          <div style={{background:surf,border:`1px solid ${bdr}`,borderRadius:6,overflow:'hidden'}}>
+            <div style={{padding:'20px 24px',borderBottom:`1px solid ${bdr}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:28,letterSpacing:'0.06em'}}>ALL TRANSACTIONS</div>
+              <div style={{display:'flex',gap:8}}>
+                {['all','income','expense'].map(f => (
+                  <button key={f} onClick={() => setTxFilter(f)}
+                    style={{background:txFilter===f?'#3b82f6':'none',border:`1px solid ${txFilter===f?'#3b82f6':bdr}`,
+                      color:txFilter===f?'#fff':sub,padding:'6px 14px',fontSize:10,
+                      letterSpacing:'0.12em',textTransform:'uppercase',cursor:'pointer',borderRadius:3,fontFamily:'DM Mono,monospace'}}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{padding:'0 24px'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:24,padding:'10px 0',
+                borderBottom:`1px solid ${bdr}`,fontSize:9,letterSpacing:'0.16em',textTransform:'uppercase',color:sub}}>
+                <span>Transaction</span><span>Category</span><span>Amount</span>
+              </div>
+              {filteredTx.map((tx,i) => (
+                <div key={tx.id} style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:24,
+                  padding:'14px 0',borderBottom:`1px solid ${bdr}`,alignItems:'center',
+                  animation:`fadeIn 0.3s ${i*0.05}s both`}}>
+                  <div style={{display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:36,height:36,borderRadius:'50%',flexShrink:0,
+                      background:tx.type==='income'?'rgba(16,185,129,0.12)':'rgba(248,113,113,0.12)',
+                      display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>
+                      {tx.type==='income'?'↑':'↓'}
+                    </div>
+                    <div>
+                      <div style={{fontSize:13,color:txt}}>{tx.name}</div>
+                      <div style={{fontSize:10,color:sub,marginTop:2}}>{tx.date}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:10,color:sub,padding:'4px 10px',background:surf2,borderRadius:2,
+                    letterSpacing:'0.1em',textTransform:'uppercase'}}>{tx.cat}</div>
+                  <div style={{fontSize:15,fontWeight:500,color:tx.type==='income'?'#10b981':'#f87171',textAlign:'right'}}>
+                    {tx.type==='income'?'+':'-'}${tx.amount.toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{padding:'16px 24px',borderTop:`1px solid ${bdr}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{fontSize:11,color:sub}}>{filteredTx.length} transactions</div>
+              <div style={{fontSize:13,color:txt}}>
+                Net: <span style={{color:'#10b981'}}>+${filteredTx.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0).toLocaleString()}</span>
+                {' '}/ <span style={{color:'#f87171'}}>-${filteredTx.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div>
+            <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:36,letterSpacing:'0.06em',marginBottom:24}}>ANNUAL REPORT — 2024</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
+              {Object.keys(COLORS).map(m => {
+                const vals = data.map(d => d[m]);
+                const avg = vals.reduce((a,b)=>a+b,0)/12;
+                const best = Math.max(...vals);
+                const worst = Math.min(...vals);
+                return (
+                  <div key={m} style={{background:surf,border:`1px solid ${bdr}`,padding:24,borderRadius:6}}>
+                    <div style={{fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:COLORS[m],marginBottom:16}}>{m}</div>
+                    <LineChart data={data} metric={m} color={COLORS[m]} dark={dark}/>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginTop:14}}>
+                      {[{l:'Total',v:METRIC_FMT[m](data.reduce((a,b)=>a+b[m],0))},
+                        {l:'Avg',v:METRIC_FMT[m](avg)},
+                        {l:'Peak',v:METRIC_FMT[m](best)}].map(s => (
+                        <div key={s.l} style={{background:surf2,padding:8,borderRadius:3}}>
+                          <div style={{fontSize:8,color:sub,letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:3}}>{s.l}</div>
+                          <div style={{fontSize:12,color:txt}}>{s.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{background:surf,border:`1px solid ${bdr}`,padding:24,borderRadius:6}}>
+              <div style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:sub,marginBottom:20}}>Month-by-Month Breakdown</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:8}}>
+                {data.map((d,i) => (
+                  <div key={d.month} style={{background:surf2,padding:'12px 8px',borderRadius:4,textAlign:'center'}}>
+                    <div style={{fontSize:9,color:sub,marginBottom:6,letterSpacing:'0.1em'}}>{d.month}</div>
+                    <div style={{fontSize:11,color:COLORS.revenue,marginBottom:2}}>{METRIC_FMT.revenue(d.revenue)}</div>
+                    <div style={{fontSize:10,color:COLORS.users}}>{METRIC_FMT.users(d.users)}</div>
+                    <div style={{fontSize:10,color:COLORS.conversions,marginTop:2}}>{METRIC_FMT.conversions(d.conversions)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

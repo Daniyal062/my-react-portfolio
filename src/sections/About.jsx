@@ -10,11 +10,10 @@ const designSkills = [
 ]
 const devSkills = [
   ['HTML / CSS', '92%'],
-  ['JavaScript', '82%'],
-  ['React', '78%'],
-  ['Node.js / Express', '72%'],
-  ['MongoDB', '68%'],
-  ['REST APIs', '76%'],
+  ['JavaScript', '80%'],
+  ['React', '76%'],
+  ['React Native', '70%'],
+  ['REST APIs', '74%'],
 ]
 
 function SkillGroup({ label, skills }) {
@@ -58,9 +57,9 @@ export default function About() {
           night. Research-first, aesthetics-always.
         </p>
         <div className={styles.links}>
-          <a className={styles.link} href="mailto:daniyal@example.com">Email ↗</a>
+          <a className={styles.link} href="mailto:daniyalmaqsood025@gmail.com.com">Email ↗</a>
           <a className={styles.link} href="https://linkedin.com/in/daniyalmaqsood" target="_blank" rel="noreferrer">LinkedIn ↗</a>
-          <a className={styles.link} href="https://github.com/daniyalmaqsood" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a className={styles.link} href="https://github.com/Daniyal062" target="_blank" rel="noreferrer">GitHub ↗</a>
         </div>
       </div>
       <div className="reveal d1"><SkillGroup label="Design" skills={designSkills} /></div>

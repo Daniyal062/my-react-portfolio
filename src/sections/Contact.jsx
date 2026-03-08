@@ -1,9 +1,9 @@
 import styles from './Contact.module.css'
 
 const links = [
-  { name: 'Email',    meta: 'daniyal@example.com',        href: 'mailto:daniyal@example.com' },
+  { name: 'Email',    meta: 'daniyalmaqsood025@gmail.com',        href: 'mailto:daniyalmaqsood025@gmail.com' },
   { name: 'LinkedIn', meta: 'Connect professionally',      href: 'https://linkedin.com/in/daniyalmaqsood' },
-  { name: 'GitHub',   meta: 'See the code',                href: 'https://github.com/daniyalmaqsood' },
+  { name: 'GitHub',   meta: 'See the code',                href: 'https://github.com/Daniyal062' },
   { name: 'Dribbble', meta: 'Design work',                 href: 'https://dribbble.com/daniyalmaqsood' },
 ]
 
@@ -14,7 +14,7 @@ export default function Contact() {
         <div className={styles.inner}>
           <div className="reveal">
             <h2 className={styles.hl}>Let's build<br /><em className={styles.hlEm}>together.</em></h2>
-            <p className={styles.sub}>Open to freelance projects in UI/UX design and full stack development. I keep my client list small so every project gets real attention.</p>
+            <p className={styles.sub}>Open to freelance projects in UI/UX design and frontend development. I keep my client list small so every project gets real attention.</p>
           </div>
           <div className={`${styles.list} reveal d1`}>
             {links.map(l => (

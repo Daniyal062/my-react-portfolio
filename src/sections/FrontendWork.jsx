@@ -1,5 +1,38 @@
 import styles from './FrontendWork.module.css'
 
+const projects = [
+  {
+    id: 'dash',
+    type: 'React · Data Visualization',
+    name: 'Databoard',
+    desc: 'Analytics dashboard with custom SVG charts, live data mode, dark/light theme, CSV export — zero chart libraries.',
+    techs: [{ label: 'React', cls: 'r' }, { label: 'ES6+', cls: 'j' }, { label: 'SVG Charts', cls: 'g' }, { label: 'useEffect', cls: '' }],
+    demo: 'databoard/index.html',
+    github: 'https://github.com/daniyalmaqsood/databoard',
+    preview: 'databoard',
+  },
+  {
+    id: 'chat',
+    type: 'React · Real-time App',
+    name: 'SyncRoom',
+    desc: 'Multi-room chat with emoji reactions, pinned messages, typing indicators and simulated real-time bot replies.',
+    techs: [{ label: 'React', cls: 'r' }, { label: 'useReducer', cls: 'j' }, { label: 'Hooks', cls: 'g' }, { label: 'State Mgmt', cls: '' }],
+    demo: 'syncroom/index.html',
+    github: 'https://github.com/daniyalmaqsood/syncroom',
+    preview: 'syncroom',
+  },
+  {
+    id: 'travel',
+    type: 'Vanilla JS · Zero Dependencies',
+    name: 'Wayfarer',
+    desc: 'Travel discovery app in pure Vanilla JS. Debounced search, multi-filter, price range, wishlist with localStorage.',
+    techs: [{ label: 'Vanilla JS', cls: 'j' }, { label: 'localStorage', cls: 'g' }, { label: 'CSS Animations', cls: '' }],
+    demo: 'wayfarer/index.html',
+    github: 'https://github.com/daniyalmaqsood/wayfarer',
+    preview: 'wayfarer',
+  },
+]
+
 function DataboardPreview() {
   return (
     <div className={`${styles.prev} ${styles.prevDash}`}>
@@ -18,7 +51,7 @@ function DataboardPreview() {
       </div>
       <div className={styles.pvdChart}>
         {[42,64,78,54,95,68,58,83].map((h,i) => (
-          <div key={i} className={`${styles.pvdCol} ${i===4||i===7?styles.pvdColB:i===2?styles.pvdColB2:''}`} style={{height:`${h}%`}} />
+          <div key={i} className={`${styles.pvdCol} ${i===4||i===7 ? styles.pvdColB : i===2 ? styles.pvdColB2 : ''}`} style={{height:`${h}%`}} />
         ))}
       </div>
     </div>
@@ -27,16 +60,16 @@ function DataboardPreview() {
 
 function SyncRoomPreview() {
   return (
-    <div className={`${styles.prev} ${styles.prevChat} ${styles.pvcWrap}`}>
+    <div className={`${styles.prev} ${styles.prevChat}`} style={{flexDirection:'column'}}>
       <div className={styles.pvcHdr}>
         <div className={styles.pvcAva} />
         <span className={styles.pvcName}># design · 3 online</span>
         <div className={styles.pvcDot} />
       </div>
-      <div className={styles.pvcBody}>
+      <div style={{display:'flex',flex:1,overflow:'hidden'}}>
         <div className={styles.pvcRooms}>
           {['# general','# design','# frontend','# random'].map((r,i) => (
-            <div key={r} className={`${styles.pvcRoom} ${i===0?styles.pvcRoomAct:''}`}>{r}</div>
+            <div key={r} className={`${styles.pvcRoom} ${i===0 ? styles.pvcRoomAct : ''}`}>{r}</div>
           ))}
         </div>
         <div className={styles.pvcMsgs}>
@@ -53,17 +86,17 @@ function SyncRoomPreview() {
 
 function WayfarerPreview() {
   return (
-    <div className={`${styles.prev} ${styles.prevTravel} ${styles.pvtWrap}`}>
+    <div className={`${styles.prev} ${styles.prevTravel}`} style={{flexDirection:'column',justifyContent:'space-between'}}>
       <div>
         <div className={styles.pvtLbl}>Discover</div>
-        <div className={styles.pvtTitle}>Explore<br/>The World</div>
+        <div className={styles.pvtTitle}>Explore<br />The World</div>
         <div className={styles.pvtSub}>9 curated destinations</div>
       </div>
       <div className={styles.pvtCards}>
-        {[['Tokyo','Japan · Asia','$740'],['Lisbon','Portugal · EU','$620']].map(([city,ctry,price]) => (
+        {[['Tokyo','Japan · Asia','$740'],['Lisbon','Portugal · EU','$620']].map(([city,country,price]) => (
           <div key={city} className={styles.pvtCard}>
             <div className={styles.pvtCity}>{city}</div>
-            <div className={styles.pvtCountry}>{ctry}</div>
+            <div className={styles.pvtCountry}>{country}</div>
             <div className={styles.pvtPrice}>{price}</div>
             <div className={styles.pvtPriceLbl}>from/person</div>
           </div>
@@ -73,47 +106,24 @@ function WayfarerPreview() {
   )
 }
 
-const projects = [
-  {
-    id: 'dash', cls: 'dash',
-    type: 'MERN Stack · Full Stack App', name: 'Databoard',
-    desc: 'Full stack analytics dashboard — React frontend with custom SVG charts, Node.js/Express REST API backend, MongoDB for data persistence, live update mode, CSV export.',
-    techs: [{l:'React',c:'r'},{l:'Node.js',c:'n'},{l:'MongoDB',c:'m'},{l:'Express',c:'j'},{l:'REST API',c:'g'}],
-    demo: 'databoard/index.html', github: 'https://github.com/daniyalmaqsood/databoard',
-  },
-  {
-    id: 'chat', cls: 'chat',
-    type: 'MERN Stack · Real-time App', name: 'SyncRoom',
-    desc: 'Full stack chat platform — React frontend, Node.js/Express backend with Socket.io-ready architecture, MongoDB message storage, JWT auth flow, multi-room with live presence.',
-    techs: [{l:'React',c:'r'},{l:'Node.js',c:'n'},{l:'MongoDB',c:'m'},{l:'Express',c:'j'},{l:'JWT Auth',c:'g'}],
-    demo: 'syncroom/index.html', github: 'https://github.com/daniyalmaqsood/syncroom',
-  },
-  {
-    id: 'travel', cls: 'travel',
-    type: 'Full Stack · Travel Platform', name: 'Wayfarer',
-    desc: 'Full stack travel discovery platform — Express REST API serving destination data, React frontend with debounced search, filters, price range, and user wishlist persisted to MongoDB.',
-    techs: [{l:'React',c:'r'},{l:'Node.js',c:'n'},{l:'MongoDB',c:'m'},{l:'Express',c:'j'},{l:'REST API',c:'g'}],
-    demo: 'wayfarer/index.html', github: 'https://github.com/daniyalmaqsood/wayfarer',
-  },
-]
-
-const PreviewMap = { dash: DataboardPreview, chat: SyncRoomPreview, travel: WayfarerPreview }
+const previews = { databoard: DataboardPreview, syncroom: SyncRoomPreview, wayfarer: WayfarerPreview }
 
 export default function FrontendWork() {
   return (
     <section id="frontend" className={styles.section}>
       <div className={`${styles.secHdr} reveal`}>
-        <div className={styles.secLbl}>Full Stack Development</div>
+        <div className={styles.secLbl}>Frontend Development</div>
         <div className={styles.secCount}>03 Projects</div>
       </div>
       <h2 className={`${styles.title} reveal d1`}>
-        Built &amp; shipped<br /><em className={styles.titleEm}>full stack.</em>
+        Built &amp; shipped<br /><em className={styles.titleEm}>in code.</em>
       </h2>
+
       <div className={styles.grid}>
         {projects.map((p, i) => {
-          const Preview = PreviewMap[p.id]
+          const Preview = previews[p.preview]
           return (
-            <div key={p.id} className={`${styles.card} ${styles[p.cls]} reveal${i>0?` d${i}`:''}`}>
+            <div key={p.id} className={`${styles.card} ${styles[p.id]} reveal${i > 0 ? ` d${i}` : ''}`}>
               <Preview />
               <div className={styles.info}>
                 <div className={styles.type}>{p.type}</div>
@@ -121,7 +131,7 @@ export default function FrontendWork() {
                 <div className={styles.desc}>{p.desc}</div>
                 <div className={styles.techs}>
                   {p.techs.map(t => (
-                    <span key={t.l} className={`${styles.tech} ${t.c?styles[`tech_${t.c}`]:''}`}>{t.l}</span>
+                    <span key={t.label} className={`${styles.tech} ${t.cls ? styles[`tech${t.cls.toUpperCase()}`] : ''}`}>{t.label}</span>
                   ))}
                 </div>
                 <div className={styles.links}>

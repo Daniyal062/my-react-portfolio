@@ -7,25 +7,20 @@ import UIUXWork     from './sections/UIUXWork'
 import FrontendWork from './sections/FrontendWork'
 import About        from './sections/About'
 import Contact      from './sections/Contact'
-
+{ SpeedInsights } from "@vercel/speed-insights/next"
 export default function App() {
-  // Scroll reveal — content visible by default, JS adds animation class
+  // Scroll reveal — global observer for .reveal elements
   useEffect(() => {
-    const attach = () => {
-      document.querySelectorAll('.reveal').forEach(el => {
-        if (!el.classList.contains('animate')) el.classList.add('animate')
-      })
-      const obs = new IntersectionObserver(
-        entries => entries.forEach(e => {
-          if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target) }
-        }),
-        { threshold: 0, rootMargin: '0px 0px -40px 0px' }
-      )
-      document.querySelectorAll('.reveal').forEach(el => obs.observe(el))
-      return obs
-    }
-    const obs = attach()
-    const mo = new MutationObserver(() => attach())
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target) }
+      }),
+      { threshold: 0.1 }
+    )
+    const attach = () => document.querySelectorAll('.reveal').forEach(el => obs.observe(el))
+    attach()
+    // Reattach on any DOM mutation (sections render async)
+    const mo = new MutationObserver(attach)
     mo.observe(document.body, { childList: true, subtree: true })
     return () => { obs.disconnect(); mo.disconnect() }
   }, [])

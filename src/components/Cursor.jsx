@@ -28,10 +28,6 @@ export default function Cursor() {
         ringRef.current.style.left = rx + 'px'
         ringRef.current.style.top  = ry + 'px'
       }
-      // Hide cursor on mobile
-      const isMobile = window.innerWidth <= 768
-      if (dotRef.current)  dotRef.current.style.display  = isMobile ? 'none' : 'block'
-      if (ringRef.current) ringRef.current.style.display = isMobile ? 'none' : 'block'
       frame = requestAnimationFrame(loop)
     }
     frame = requestAnimationFrame(loop)

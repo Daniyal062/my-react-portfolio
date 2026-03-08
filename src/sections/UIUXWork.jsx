@@ -218,7 +218,9 @@ export default function UIUXWork() {
                   <div key={l}><div className={styles.bmVal}>{v}</div><div className={`${styles.bmLbl} ${styles.bmLblShop}`}>{l}</div></div>
                 ))}
               </div>
-              <a className={`${styles.biCta} ${styles.biCtaShop}`} href="case-shoprift.html" target="_blank">View Case Study →</a>
+              <a className={`${styles.biCta} ${styles.biCtaShop}`} href="/MyExternalProject/index.html" 
+  target="_blank" 
+  rel="noopener noreferrer">View Case Study →</a>
             </div>
           </div>
         </div>
