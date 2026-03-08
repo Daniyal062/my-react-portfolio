@@ -7,7 +7,7 @@ import UIUXWork     from './sections/UIUXWork'
 import FrontendWork from './sections/FrontendWork'
 import About        from './sections/About'
 import Contact      from './sections/Contact'
-{ SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 export default function App() {
   // Scroll reveal — global observer for .reveal elements
   useEffect(() => {
@@ -35,6 +35,7 @@ export default function App() {
       <About />
       <FrontendWork />
       <Contact />
+      <SpeedInsights />
     </>
   )
 }
